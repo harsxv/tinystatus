@@ -1,0 +1,76 @@
+- name: GitHub Home
+  type: http
+  host: https://github.com
+  expected_code: 200
+
+- name: GitHub API
+  type: http
+  host: https://api.github.com
+  expected_code: 200
+
+- name: Wikipedia Home
+  type: http
+  host: https://www.wikipedia.org
+  expected_code: 200
+
+- name: Wikipedia API
+  type: http
+  host: https://en.wikipedia.org/w/api.php
+  expected_code: 200
+
+- name: DigitalOcean
+  type: http
+  host: https://www.digitalocean.com
+  expected_code: 200
+
+- name: DigitalOcean API
+  type: http
+  host: https://api.digitalocean.com
+  expected_code: 200
+
+- name: Google Home
+  type: http
+  host: https://www.google.com
+  expected_code: 200
+
+- name: Cloudflare DNS Checker
+  type: ping
+  host: 1.1.1.1
+
+- name: Google Public DNS
+  type: ping
+  host: 8.8.8.8
+
+- name: Dummy Postgres Database
+  type: port
+  host: ec2-54-173-89-248.compute-1.amazonaws.com
+  port: 5432
+
+- name: Dummy MySQL Database
+  type: port
+  host: db.example.com
+  port: 3306
+
+- name: Amazon Web Services
+  type: http
+  host: https://aws.amazon.com
+  expected_code: 200
+
+- name: AWS S3 API
+  type: http
+  host: https://s3.amazonaws.com
+  expected_code: 200
+
+- name: Twitter
+  type: http
+  host: https://twitter.com
+  expected_code: 200
+
+- name: Facebook Home
+  type: http
+  host: https://www.facebook.com
+  expected_code: 200
+ 
+- name: Localhost
+  type: ping
+  host: localhost

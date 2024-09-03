@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyStatus History</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .history-item {
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-height: 300px;
+            overflow: auto;
+        }
+        .history-item h2 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+        .history-entry {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .status-up { color: #27ae60; }
+        .status-down { color: #e74c3c; }
+        .footer {
+            text-align: center;
+            font-size: .9em;
+            color: #7f8c8d;
+            margin-top: 40px;
+        }
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>TinyStatus History</h1>
+    <div class="history-grid">
+        {% for service, entries in history.items() %}
+        <div class="history-item">
+            <h2>{{ service }}</h2>
+            {% for entry in entries|reverse %}
+            <div class="history-entry">
+                <span>{{ entry.timestamp.split('T')[0] }} {{ entry.timestamp.split('T')[1][:8] }}</span>
+                <span class="{% if entry.status %}status-up{% else %}status-down{% endif %}">
+                    {{ 'Up' if entry.status else 'Down' }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="footer">
+        <p>Last updated: {{ last_updated }}</p>
+        <p>Powered by TinyStatus</p>
+        <p><a href="index.html">Back to Current Status</a></p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyStatus</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        .status-item {
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform .2s;
+        }
+        .status-item:hover {
+            transform: translateY(-5px);
+        }
+        .status-item h3 {
+            margin: 0 0 10px;
+        }
+        .status-up { color: #27ae60; }
+        .status-down { color: #e74c3c; }
+        .incidents {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+        .footer {
+            text-align: center;
+            font-size: .9em;
+            color: #7f8c8d;
+            margin-top: 40px;
+        }
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>TinyStatus</h1>
+    <h2>Current Status</h2>
+    <div class="status-grid">
+        {% for check in checks %}
+        <div class="status-item">
+            <h3>{{ check.name }}</h3>
+            <p class="{% if check.status %}status-up{% else %}status-down{% endif %}">
+                {{ 'Operational' if check.status else 'Down' }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    <h2>Incident History</h2>
+    <div class="incidents">
+        {{ incidents | safe }}
+    </div>
+    <div class="footer">
+        <p>Last updated: {{ last_updated }}</p>
+        <p>Powered by TinyStatus</p>
+        <p><a href="history.html">View Status History</a></p>
+    </div>
+</body>
+</html>
