@@ -76,7 +76,7 @@
     </div>
     <div class="footer">
         <p>Last updated: {{ last_updated }}</p>
-        <p>Powered by TinyStatus</p>
+        <p>Powered by <a href="https://github.com/harsxv/tinystatus">TinyStatus</a></p>
         <p><a href="index.html">Back to Current Status</a></p>
     </div>
 </body>
