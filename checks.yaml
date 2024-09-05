@@ -18,14 +18,9 @@
   host: https://en.wikipedia.org/w/api.php
   expected_code: 200
 
-- name: DigitalOcean
+- name: Hacker News
   type: http
-  host: https://www.digitalocean.com
-  expected_code: 200
-
-- name: DigitalOcean API
-  type: http
-  host: https://api.digitalocean.com
+  host: https://news.ycombinator.com
   expected_code: 200
 
 - name: Google Home
