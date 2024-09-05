@@ -11,6 +11,7 @@ TinyStatus is a simple, customizable status page generator that allows you to mo
 - Customizable service checks via YAML configuration
 - Incident history tracking
 - Automatic status updates at configurable intervals
+- The generated HTML is only 5KB in size
 
 ## Prerequisites
 
@@ -21,7 +22,7 @@ TinyStatus is a simple, customizable status page generator that allows you to mo
 
 1. Clone the repository or download the source code:
    ```
-   git clone https://github.com/yourusername/tinystatus.git
+   git clone https://github.com/harsxv/tinystatus.git
    cd tinystatus
    ```
 
@@ -72,9 +73,10 @@ TinyStatus is a simple, customizable status page generator that allows you to mo
    python tinystatus.py
    ```
 
-2. The script will generate two HTML files:
+2. The script will generate two files:
    - `index.html`: The main status page
    - `history.html`: The status history page
+   - `history.json`: The status history and timestamp data
 
 3. To keep the status page continuously updated, you can run the script in the background:
    - On Unix-like systems (Linux, macOS):
