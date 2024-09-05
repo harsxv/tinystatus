@@ -87,6 +87,15 @@ TinyStatus is a simple, customizable status page generator that allows you to mo
 
 4. Serve the generated HTML files using your preferred web server (e.g., Apache, Nginx, or a simple Python HTTP server for testing).
 
+## Using Docker
+
+In order to run the script using Docker:
+
+   ```
+    docker build -t tinystatus .
+    docker run -ti --rm --name tinystatus -v "$PWD":/usr/src/myapp -w /usr/src/myapp tinystatus
+   ```
+
 ## Customization
 
 - Adjust the configuration variables in the `.env` file to customize the behavior of TinyStatus.
