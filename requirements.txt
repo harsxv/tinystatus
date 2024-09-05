@@ -1,4 +1,5 @@
 aiohttp
 jinja2
 markdown
+python-dotenv
 pyyaml
