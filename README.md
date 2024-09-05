@@ -15,7 +15,7 @@ TinyStatus is a simple, customizable status page generator that allows you to mo
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.11 or higher
 - pip (Python package manager)
 
 ## Installation
