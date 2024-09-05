@@ -25,7 +25,7 @@ TinyStatus is a simple, customizable status page generator that allows you to mo
 
 2. Install the required dependencies:
    ```
-   pip install pyyaml aiohttp markdown jinja2
+   pip install -r requirements.txt
    ```
 
 ## Configuration
