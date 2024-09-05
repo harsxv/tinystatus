@@ -1,6 +1,6 @@
 # TinyStatus
 
-TinyStatus is a simple, customizable status page generator that allows you to monitor the status of various services and display them on a clean, responsive web page.
+TinyStatus is a simple, customizable status page generator that allows you to monitor the status of various services and display them on a clean, responsive web page. [Check out an online demo.](https://status.harry.id)
 
 ## Features
 
