@@ -2,6 +2,8 @@
 
 TinyStatus is a simple, customizable status page generator that allows you to monitor the status of various services and display them on a clean, responsive web page. [Check out an online demo.](https://status.harry.id)
 
+![image](https://github.com/user-attachments/assets/28227221-d1e1-442e-89a4-2a0a09615514)
+
 ## Features
 
 - Monitor HTTP endpoints, ping hosts, and check open ports
