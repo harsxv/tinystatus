@@ -49,8 +49,7 @@ async def check_port(host, port):
         return False
 
 async def run_checks(checks):
-    background_tasks = set()
-    task = None
+    background_tasks = {}
     async with asyncio.TaskGroup() as tg:
         for check in checks:
             if check['type'] == 'http':
@@ -61,11 +60,13 @@ async def run_checks(checks):
                 task = tg.create_task(check_port(check['host'], check['port']), name=check['name'])
 
             if task:
-                background_tasks.add(task)
+                background_tasks[check['name']] = task
 
-    results = []
-    for task in background_tasks:
-        results.append({'name': task.get_name(), 'status': task.result()})
+    results = [
+        {"name": check["name"], "status": background_tasks[check["name"]].result()}
+        for check in checks
+    ]
+
     return results
 
 # History management
@@ -106,7 +107,7 @@ async def monitor_services():
                 history_template = Template(f.read())
 
             results = await run_checks(checks)
-            print(results)
+
             update_history(results)
 
             html = template.render(checks=results, incidents=incidents, last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
