@@ -17,7 +17,7 @@ Check out an online demo https://status.harry.id
 
 ## Prerequisites
 
-- Python 3.7 or higher
+- Python 3.11 or higher
 - pip (Python package manager)
 
 ## Installation
