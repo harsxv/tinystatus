@@ -22,6 +22,7 @@ INCIDENTS_FILE = os.getenv('INCIDENTS_FILE', 'incidents.md')
 TEMPLATE_FILE = os.getenv('TEMPLATE_FILE', 'index.html.theme')
 HISTORY_TEMPLATE_FILE = os.getenv('HISTORY_TEMPLATE_FILE', 'history.html.theme')
 STATUS_HISTORY_FILE = os.getenv('STATUS_HISTORY_FILE', 'history.json')
+HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY', '')
 
 # Service check functions
 async def check_http(url, expected_code):
@@ -92,6 +93,8 @@ def update_history(results):
 
 # Main monitoring loop
 async def monitor_services():
+    os.makedirs(HTML_OUTPUT_DIRECTORY, exist_ok=True)
+    
     while True:
         try:
             with open(CHECKS_FILE, 'r') as f:
@@ -111,11 +114,11 @@ async def monitor_services():
             update_history(results)
 
             html = template.render(checks=results, incidents=incidents, last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            with open('index.html', 'w') as f:
+            with open(os.path.join(HTML_OUTPUT_DIRECTORY, 'index.html'), 'w') as f:
                 f.write(html)
 
             history_html = history_template.render(history=load_history(), last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            with open('history.html', 'w') as f:
+            with open(os.path.join(HTML_OUTPUT_DIRECTORY, 'history.html'), 'w') as f:
                 f.write(history_html)
 
             logging.info(f"Status page and history updated at {datetime.now()}")
@@ -142,7 +145,8 @@ def main():
     results = asyncio.run(run_checks(checks))
     html = template.render(checks=results, incidents=incidents, last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-    with open('index.html', 'w') as f:
+    os.makedirs(HTML_OUTPUT_DIRECTORY, exist_ok=True)
+    with open(os.path.join(HTML_OUTPUT_DIRECTORY, 'index.html'), 'w') as f:
         f.write(html)
 
 if __name__ == "__main__":
