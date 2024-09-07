@@ -37,6 +37,7 @@ Check out an online demo https://status.harry.id
 
 1. Create a `.env` file in the project root and customize the variables:
    ```
+   MONITOR_CONTINOUSLY=True
    CHECK_INTERVAL=30
    MAX_HISTORY_ENTRIES=100
    LOG_LEVEL=INFO
@@ -45,6 +46,7 @@ Check out an online demo https://status.harry.id
    TEMPLATE_FILE=index.html.theme
    HISTORY_TEMPLATE_FILE=history.html.theme
    STATUS_HISTORY_FILE=history.json
+   HTML_OUTPUT_DIRECTORY=/var/www/htdocs/status/
    ```
 
 2. Edit the `checks.yaml` file to add or modify the services you want to monitor. Example:
