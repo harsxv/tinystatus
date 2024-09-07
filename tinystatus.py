@@ -23,7 +23,7 @@ INCIDENTS_FILE = os.getenv('INCIDENTS_FILE', 'incidents.md')
 TEMPLATE_FILE = os.getenv('TEMPLATE_FILE', 'index.html.theme')
 HISTORY_TEMPLATE_FILE = os.getenv('HISTORY_TEMPLATE_FILE', 'history.html.theme')
 STATUS_HISTORY_FILE = os.getenv('STATUS_HISTORY_FILE', 'history.json')
-HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY', '')
+HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY', os.getcwd())
 
 # Service check functions
 async def check_http(url, expected_code):
