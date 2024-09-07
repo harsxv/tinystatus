@@ -14,6 +14,7 @@ import logging
 load_dotenv()
 
 # Configuration
+MONITOR_CONTINOUSLY = os.getenv('MONITOR_CONTINOUSLY', 'True') == 'True'
 CHECK_INTERVAL = int(os.getenv('CHECK_INTERVAL', 30))
 MAX_HISTORY_ENTRIES = int(os.getenv('MAX_HISTORY_ENTRIES', 100))
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
@@ -116,6 +117,9 @@ async def monitor_services():
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
 
+        if MONITOR_CONTINOUSLY == False:
+            return
+        
         await asyncio.sleep(CHECK_INTERVAL)
 
 # Main function
