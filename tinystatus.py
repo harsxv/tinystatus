@@ -54,13 +54,12 @@ async def run_checks(checks):
     background_tasks = {}
     async with asyncio.TaskGroup() as tg:
         for check in checks:
-            if check['type'] == 'http':
-                task = tg.create_task(check_http(check['host'], check['expected_code']), name=check['name'])
-            elif check['type'] == 'ping':
-                task = tg.create_task(check_ping(check['host']), name=check['name'])
-            elif check['type'] == 'port':
-                task = tg.create_task(check_port(check['host'], check['port']), name=check['name'])
-
+            task = tg.create_task(
+                check_http(check['host'], check['expected_code']) if check['type'] == 'http' else
+                check_ping(check['host']) if check['type'] == 'ping' else
+                check_port(check['host'], check['port']) if check['type'] == 'port' else None,
+                name=check['name']
+            )
             if task:
                 background_tasks[check['name']] = task
 
