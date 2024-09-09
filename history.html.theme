@@ -76,6 +76,11 @@
         }
         .footer a:hover { text-decoration: underline; }
     </style>
+    <script>
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+    </script>
 </head>
 <body>
     <h1>TinyStatus History</h1>
