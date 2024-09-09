@@ -4,7 +4,10 @@ TinyStatus is a simple, customizable status page generator that allows you to mo
 
 Check out an online demo https://status.harry.id
 
-![image](https://github.com/user-attachments/assets/28227221-d1e1-442e-89a4-2a0a09615514)
+| Light Mode | Dark Mode | 
+|-|-|
+| ![Light](https://github.com/user-attachments/assets/28227221-d1e1-442e-89a4-2a0a09615514) | ![Dark](https://github.com/user-attachments/assets/8bbfc364-319a-417d-898d-3e0807b782bf) |
+
 
 ## Features
 
