@@ -14,6 +14,7 @@ Check out an online demo https://status.harry.id
 - Incident history tracking
 - Automatic status updates at configurable intervals
 - The generated HTML is only 5KB in size
+- Supports both light and dark themes
 
 ## Prerequisites
 
