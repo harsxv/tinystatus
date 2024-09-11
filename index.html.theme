@@ -83,6 +83,8 @@
 <body>
     <h1>TinyStatus</h1>
     <h2>Current Status</h2>
+    {% for group, checks in groups.items() %}
+    <h3>{{group}} Status</h3>
     <div class="status-grid">
         {% for check in checks %}
         <div class="status-item">
@@ -93,6 +95,7 @@
         </div>
         {% endfor %}
     </div>
+    {% endfor %}
     <h2>Incident History</h2>
     <div class="incidents">
         {{ incidents | safe }}

@@ -25,6 +25,7 @@ HISTORY_TEMPLATE_FILE = os.getenv('HISTORY_TEMPLATE_FILE', 'history.html.theme')
 STATUS_HISTORY_FILE = os.getenv('STATUS_HISTORY_FILE', 'history.json')
 HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY', os.getcwd())
 
+
 # Service check functions
 async def check_http(url, expected_code):
     async with aiohttp.ClientSession() as session:
@@ -34,12 +35,14 @@ async def check_http(url, expected_code):
         except:
             return False
 
+
 async def check_ping(host):
     try:
         result = subprocess.run(['ping', '-c', '1', '-W', '2', host], capture_output=True, text=True)
         return result.returncode == 0
     except:
         return False
+
 
 async def check_port(host, port):
     try:
@@ -49,6 +52,7 @@ async def check_port(host, port):
         return True
     except:
         return False
+
 
 async def run_checks(checks):
     background_tasks = {}
@@ -70,6 +74,7 @@ async def run_checks(checks):
 
     return results
 
+
 # History management
 def load_history():
     if os.path.exists(STATUS_HISTORY_FILE):
@@ -77,28 +82,34 @@ def load_history():
             return json.load(f)
     return {}
 
+
 def save_history(history):
     with open(STATUS_HISTORY_FILE, 'w') as f:
         json.dump(history, f, indent=2)
 
+
 def update_history(results):
+    # TODO: Configure groups in history page
     history = load_history()
     current_time = datetime.now().isoformat()
-    for check in results:
-        if check['name'] not in history:
-            history[check['name']] = []
-        history[check['name']].append({'timestamp': current_time, 'status': check['status']})
-        history[check['name']] = history[check['name']][-MAX_HISTORY_ENTRIES:]
+    for group in results.keys():
+        for check in results[group]:
+            if check['name'] not in history:
+                history[check['name']] = []
+            history[check['name']].append({'timestamp': current_time, 'status': check['status']})
+            history[check['name']] = history[check['name']][-MAX_HISTORY_ENTRIES:]
     save_history(history)
+
 
 # Main monitoring loop
 async def monitor_services():
     os.makedirs(HTML_OUTPUT_DIRECTORY, exist_ok=True)
-    
+
     while True:
+        down_services = []
         try:
             with open(CHECKS_FILE, 'r') as f:
-                checks = yaml.safe_load(f)
+                groups = yaml.safe_load(f)
 
             with open(INCIDENTS_FILE, 'r') as f:
                 incidents = markdown.markdown(f.read())
@@ -109,11 +120,13 @@ async def monitor_services():
             with open(HISTORY_TEMPLATE_FILE, 'r') as f:
                 history_template = Template(f.read())
 
-            results = await run_checks(checks)
+            results = {}
+            for group in groups:
+                results[group['title']] = await run_checks(group['checks'])
 
             update_history(results)
 
-            html = template.render(checks=results, incidents=incidents, last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            html = template.render(groups=results, incidents=incidents, last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             with open(os.path.join(HTML_OUTPUT_DIRECTORY, 'index.html'), 'w') as f:
                 f.write(html)
 
@@ -122,17 +135,23 @@ async def monitor_services():
                 f.write(history_html)
 
             logging.info(f"Status page and history updated at {datetime.now()}")
-            down_services = [check['name'] for check in results if not check['status']]
-            if down_services:
-                logging.warning(f"Services currently down: {', '.join(down_services)}")
+
+            for group in results:
+                group_down = [check['name'] for check in results[group] if not check['status']]
+                down_services += group_down
 
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
 
-        if MONITOR_CONTINOUSLY == False:
+        # down_services = [group[check]['name'] for check in group in results if not check['status']]
+        if down_services:
+            logging.warning(f"Services currently down: {', '.join(down_services)}")
+
+        if not MONITOR_CONTINOUSLY:
             return
         
         await asyncio.sleep(CHECK_INTERVAL)
+
 
 # Main function
 def main():
