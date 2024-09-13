@@ -1,4 +1,6 @@
 import os
+import time
+
 from dotenv import load_dotenv
 import yaml
 import asyncio
@@ -106,6 +108,7 @@ async def monitor_services():
     os.makedirs(HTML_OUTPUT_DIRECTORY, exist_ok=True)
 
     while True:
+        start_ts = time.monotonic()
         down_services = []
         try:
             with open(CHECKS_FILE, 'r') as f:
@@ -149,8 +152,8 @@ async def monitor_services():
 
         if not MONITOR_CONTINOUSLY:
             return
-        
-        await asyncio.sleep(CHECK_INTERVAL)
+        time_spent = int(time.monotonic() - start_ts)
+        await asyncio.sleep(max(0, CHECK_INTERVAL - time_spent))
 
 
 # Main function
