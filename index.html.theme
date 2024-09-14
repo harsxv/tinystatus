@@ -39,7 +39,7 @@
                 text-decoration: none !important;
             }
             a:hover {
-                color: white;
+                color: lightgray ! important;
             }
         }
         body {
