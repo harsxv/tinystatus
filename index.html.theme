@@ -31,6 +31,21 @@
                 --footer-color: #888;
                 --link-color: #5dade2;
             }
+            a,
+            a:link,
+            a:visited {
+                cursor: pointer;
+                color: rgb(144, 202, 249);
+                text-decoration: none !important;
+                -webkit-transition: color 1s ease, background-color 1s ease;
+                -moz-transition: color 1s ease, background-color 1s ease;
+                -o-transition: color 1s ease, background-color 1s ease;
+                transition: color 1s ease, background-color 1s ease;
+            }
+            a:hover {
+                color: #b2ebf2;
+                background-color: #424242;
+            }
         }
         body {
             font-family: sans-serif;
@@ -85,6 +100,23 @@
             text-decoration: none;
         }
         .footer a:hover { text-decoration: underline; }
+         a,
+        a:link,
+        a:visited {
+            cursor: pointer;
+            color: rgb(35, 148, 218);
+            text-decoration: none !important;
+            -webkit-transition: color 1s ease, background-color 1s ease;
+            -moz-transition: color 1s ease, background-color 1s ease;
+            -o-transition: color 1s ease, background-color 1s ease;
+            transition: color 1s ease, background-color 1s ease;
+        }
+
+        a:hover {
+            color: #86b692;
+            background-color: #daffcf;
+        }
+
     </style>
 </head>
 <body>
@@ -95,7 +127,7 @@
     <div class="status-grid">
         {% for check in checks %}
         <div class="status-item">
-            <h3>{{ check.name }}</h3>
+            <h3><a target="_blank" href="{{ check.url }}">{{ check.name }}</a></h3>
             <p class="{% if check.status %}status-up{% else %}status-down{% endif %}">
                 {{ 'Operational' if check.status else 'Down' }}
             </p>
