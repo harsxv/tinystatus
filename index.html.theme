@@ -37,14 +37,9 @@
                 cursor: pointer;
                 color: rgb(144, 202, 249);
                 text-decoration: none !important;
-                -webkit-transition: color 1s ease, background-color 1s ease;
-                -moz-transition: color 1s ease, background-color 1s ease;
-                -o-transition: color 1s ease, background-color 1s ease;
-                transition: color 1s ease, background-color 1s ease;
             }
             a:hover {
-                color: #b2ebf2;
-                background-color: #424242;
+                color: white;
             }
         }
         body {
@@ -106,15 +101,10 @@
             cursor: pointer;
             color: rgb(35, 148, 218);
             text-decoration: none !important;
-            -webkit-transition: color 1s ease, background-color 1s ease;
-            -moz-transition: color 1s ease, background-color 1s ease;
-            -o-transition: color 1s ease, background-color 1s ease;
-            transition: color 1s ease, background-color 1s ease;
         }
 
         a:hover {
             color: #86b692;
-            background-color: #daffcf;
         }
 
     </style>
@@ -126,12 +116,14 @@
     <h3>{{group}} Status</h3>
     <div class="status-grid">
         {% for check in checks %}
+        <a target="_blank" href="{{ check.url }}">
         <div class="status-item">
-            <h3><a target="_blank" href="{{ check.url }}">{{ check.name }}</a></h3>
+                <h3>{{ check.name }}</h3>
             <p class="{% if check.status %}status-up{% else %}status-down{% endif %}">
                 {{ 'Operational' if check.status else 'Down' }}
             </p>
         </div>
+        </a>
         {% endfor %}
     </div>
     {% endfor %}
