@@ -10,7 +10,7 @@
     <link rel="manifest" href="assets/site.webmanifest">
     <link rel="mask-icon" href="assets/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="theme-color" content="#ffffff"> 
+    <meta name="theme-color" content="#ffffff">
     <style>
         :root {
             --bg-color: #f4f4f4;
@@ -35,11 +35,11 @@
             a:link,
             a:visited {
                 cursor: pointer;
-                color: rgb(144, 202, 249);
+                color: rgb(128, 128, 128);
                 text-decoration: none !important;
             }
             a:hover {
-                color: lightgray ! important;
+                color: white !important;
             }
         }
         body {
@@ -99,12 +99,12 @@
         a:link,
         a:visited {
             cursor: pointer;
-            color: rgb(35, 148, 218);
+            color: rgb(51, 51, 51);
             text-decoration: none !important;
         }
 
         a:hover {
-            color: #86b692;
+            color: rgb(86, 86, 86);
         }
 
     </style>
@@ -116,14 +116,18 @@
     <h3>{{group}} Status</h3>
     <div class="status-grid">
         {% for check in checks %}
-        <a target="_blank" href="{{ check.url }}">
+            {% if check.url %}
+                <a target="_blank" href="{{ check.url }}">
+            {% endif %}
         <div class="status-item">
-                <h3>{{ check.name }}</h3>
+            <h3>{{ check.name }}</h3>
             <p class="{% if check.status %}status-up{% else %}status-down{% endif %}">
                 {{ 'Operational' if check.status else 'Down' }}
             </p>
         </div>
-        </a>
+            {% if check.url %}
+                </a>
+            {% endif %}
         {% endfor %}
     </div>
     {% endfor %}
