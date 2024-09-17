@@ -72,7 +72,7 @@ async def run_checks(checks):
     results = [
         {
             "name": check["name"],
-            "url": check.get("url", check.get("host")),
+            "url": check.get("url"),
             "status": background_tasks[check["name"]].result()}
         for check in checks
     ]
