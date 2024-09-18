@@ -1,5 +1,8 @@
-# TinyStatus
+<div align="center" width="100%">
+    <img src="./assets/android-chrome-192x192.png" width="128" alt="" />
+</div>
 
+# TinyStatus
 TinyStatus is a simple, customizable status page generator that allows you to monitor the status of various services and display them on a clean, responsive web page.
 
 Check out an online demo https://status.harry.id
@@ -16,8 +19,9 @@ Check out an online demo https://status.harry.id
 - Customizable service checks via YAML configuration
 - Incident history tracking
 - Automatic status updates at configurable intervals
-- The generated HTML is only 5KB in size
 - Supports both light and dark themes
+- Supports grouping
+- Cards clickable (optional)
 
 ## Prerequisites
 
@@ -53,12 +57,15 @@ Check out an online demo https://status.harry.id
    HTML_OUTPUT_DIRECTORY=/var/www/htdocs/status/
    ```
 
-2. Edit the `checks.yaml` file to add or modify the services you want to monitor. Example:
+2. Edit the `checks.yaml` file to add or modify the services you want to monitor.
+   Example:
    ```yaml
-   - name: GitHub Home
+   - name: GitHub Home 
      type: http
      host: https://github.com
+     url: https://github.com # (optional: URL review/clickable)
      expected_code: 200
+     
 
    - name: Google DNS
      type: ping
@@ -70,9 +77,9 @@ Check out an online demo https://status.harry.id
      port: 5432
    ```
 
-3. (Optional) Customize the `incidents.md` file to add any known incidents or maintenance schedules.
+4. (Optional) Customize the `incidents.md` file to add any known incidents or maintenance schedules.
 
-4. (Optional) Modify the `index.html.theme` and `history.html.theme` files to customize the look and feel of your status pages.
+5. (Optional) Modify the `index.html.theme` and `history.html.theme` files to customize the look and feel of your status pages.
 
 ## Usage
 
