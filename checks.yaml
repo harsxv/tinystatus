@@ -3,16 +3,19 @@
     - name: GitHub Home
       type: http
       host: https://github.com
+      url: https://docs.github.com/en
       expected_code: 200
 
     - name: GitHub API
       type: http
       host: https://api.github.com
+      url: https://api.github.com/users
       expected_code: 200
 
     - name: Wikipedia Home
       type: http
       host: https://www.wikipedia.org
+      url: https://en.wikipedia.org/wiki/Main_Page
       expected_code: 200
 
     - name: Wikipedia API
