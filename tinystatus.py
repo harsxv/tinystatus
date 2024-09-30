@@ -29,12 +29,13 @@ HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY', os.getcwd())
 
 
 # Service check functions
-async def check_http(url, expected_code):
+async def check_http(url, expected_code, selfsigned):
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get(url) as response:
+            async with session.get(url, ssl=not selfsigned) as response:
                 return response.status == expected_code
-        except:
+        except Exception as err:
+            print("error with ", url, err)
             return False
 
 
@@ -60,8 +61,14 @@ async def run_checks(checks):
     background_tasks = {}
     async with asyncio.TaskGroup() as tg:
         for check in checks:
+            if check['type'] == 'http':
+                if 'ssc' in check:
+                    selfcert = check['ssc']
+                else:
+                    selfcert = False
+
             task = tg.create_task(
-                check_http(check['host'], check['expected_code']) if check['type'] == 'http' else
+                check_http(check['host'], check['expected_code'], selfcert) if check['type'] == 'http' else
                 check_ping(check['host']) if check['type'] == 'ping' else
                 check_port(check['host'], check['port']) if check['type'] == 'port' else None,
                 name=check['name']
