@@ -78,3 +78,9 @@
     - name: Localhost
       type: ping
       host: localhost
+
+    - name: Home Server with Self-Signed Certs
+      type: http
+      host: https://homeserver.local
+      ssc: True
+      expected_code: 200

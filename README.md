@@ -64,8 +64,8 @@ Check out an online demo https://status.harry.id
      type: http
      host: https://github.com
      url: https://github.com # (optional: URL review/clickable)
+     ssc: True # (optional if the server uses a self-signed certificate)
      expected_code: 200
-     
 
    - name: Google DNS
      type: ping
@@ -75,7 +75,7 @@ Check out an online demo https://status.harry.id
      type: port
      host: db.example.com
      port: 5432
-   ```
+ ```
 
 4. (Optional) Customize the `incidents.md` file to add any known incidents or maintenance schedules.
 
