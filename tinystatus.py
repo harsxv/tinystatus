@@ -11,6 +11,7 @@ from jinja2 import Template
 from datetime import datetime
 import json
 import logging
+import platform
 
 # Load environment variables
 load_dotenv()
@@ -27,6 +28,8 @@ HISTORY_TEMPLATE_FILE = os.getenv('HISTORY_TEMPLATE_FILE', 'history.html.theme')
 STATUS_HISTORY_FILE = os.getenv('STATUS_HISTORY_FILE', 'history.json')
 HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY', os.getcwd())
 
+# Platform Idendifier
+PLATFORM = platform.system().lower()
 
 # Service check functions
 async def check_http(url, expected_code, selfsigned):
@@ -41,7 +44,10 @@ async def check_http(url, expected_code, selfsigned):
 
 async def check_ping(host):
     try:
-        result = subprocess.run(['ping', '-c', '1', '-W', '2', host], capture_output=True, text=True)
+        if PLATFORM == 'windows':
+            result = subprocess.run(['ping', '-n', '1', '-w', '2000', host], capture_output=True, text=True)
+        else:
+            result = subprocess.run(['ping', '-c', '1', '-W', '2', host], capture_output=True, text=True)
         return result.returncode == 0
     except:
         return False
