@@ -64,7 +64,7 @@ Check out an online demo https://status.harry.id
      type: http
      host: https://github.com
      url: https://github.com # (optional: URL review/clickable)
-     ssc: True # (optional if the server uses a self-signed certificate)
+     ssc: True # (optional: if the server uses a self-signed certificate)
      expected_code: 200
 
    - name: Google DNS
@@ -75,11 +75,11 @@ Check out an online demo https://status.harry.id
      type: port
      host: db.example.com
      port: 5432
- ```
+   ```
 
-4. (Optional) Customize the `incidents.md` file to add any known incidents or maintenance schedules.
+3. (Optional) Customize the `incidents.md` file to add any known incidents or maintenance schedules.
 
-5. (Optional) Modify the `index.html.theme` and `history.html.theme` files to customize the look and feel of your status pages.
+4. (Optional) Modify the `index.html.theme` and `history.html.theme` files to customize the look and feel of your status pages.
 
 ## Usage
 
@@ -88,7 +88,7 @@ Check out an online demo https://status.harry.id
    python tinystatus.py
    ```
 
-2. The script will generate two files:
+2. The script will generate three files:
    - `index.html`: The main status page
    - `history.html`: The status history page
    - `history.json`: The status history and timestamp data
@@ -100,7 +100,7 @@ Check out an online demo https://status.harry.id
      ```
    - On Windows, you can use the Task Scheduler to run the script at startup.
 
-4. Serve the generated HTML files using your preferred web server (e.g., Apache, Nginx, or a simple Python HTTP server for testing).
+4. Serve the generated HTML files using your preferred web server (e.g., Apache, NGINX, or a simple Python HTTP server for testing).
 
 ## Using Docker
 
@@ -124,7 +124,7 @@ TinyStatus porting are available in:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+[Contributions](https://github.com/harsxv/tinystatus/contribute) are, of course, most welcome!
 
 ## License
 
