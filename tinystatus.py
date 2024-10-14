@@ -107,15 +107,20 @@ def save_history(history):
 
 
 def update_history(results):
-    # TODO: Configure groups in history page
     history = load_history()
     current_time = datetime.now().isoformat()
-    for group in results.keys():
-        for check in results[group]:
-            if check['name'] not in history:
-                history[check['name']] = []
-            history[check['name']].append({'timestamp': current_time, 'status': check['status']})
-            history[check['name']] = history[check['name']][-MAX_HISTORY_ENTRIES:]
+    if 'groups' not in history:
+        history['groups'] = []
+    for group_title, checks in results.items():
+        group_found = next((group for group in history['groups'] if group['title'] == group_title), None)
+        if group_found is None:
+            group_found = {'title': group_title, 'checks': {}}
+            history['groups'].append(group_found)
+        for check in checks:
+            if check['name'] not in group_found['checks']:
+                group_found['checks'][check['name']] = []
+            group_found['checks'][check['name']].append({'timestamp': current_time, 'status': check['status']})
+            group_found['checks'][check['name']] = group_found['checks'][check['name']][-MAX_HISTORY_ENTRIES:]
     save_history(history)
 
 
