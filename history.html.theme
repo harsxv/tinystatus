@@ -9,6 +9,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
     <link rel="manifest" href="assets/site.webmanifest">
     <link rel="mask-icon" href="assets/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="description" content="TinyStatus is a simple, customizable status page generator that allows you to monitor the status of various services and display them on a clean, responsive web page.">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
     <style>
@@ -71,7 +72,7 @@
             justify-content: space-between;
         }
         .status-up { color: #27ae60; }
-        .status-down { color: #e74c3c; }
+        .status-down { color: #FF9185; }
         .footer {
             text-align: center;
             font-size: .9em;
