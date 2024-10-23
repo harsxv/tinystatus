@@ -21,6 +21,8 @@
             --card-shadow: rgba(0,0,0,0.1);
             --footer-color: #7f8c8d;
             --link-color: #3498db;
+            --secondary-bg-color: #fff;
+            --status-down-color: #e74c3c;
         }
         @media (prefers-color-scheme: dark) {
             :root {
@@ -32,6 +34,7 @@
                 --footer-color: #888;
                 --link-color: #5dade2;
                 --secondary-bg-color: #27272a;
+                --status-down-color: #FF9185;
             }
         }
         body {
@@ -72,7 +75,7 @@
             justify-content: space-between;
         }
         .status-up { color: #27ae60; }
-        .status-down { color: #FF9185; }
+        .status-down { color: var(--status-down-color); }
         .footer {
             text-align: center;
             font-size: .9em;

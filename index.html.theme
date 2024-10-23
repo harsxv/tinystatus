@@ -25,6 +25,8 @@
             --card-shadow: rgba(0,0,0,0.1);
             --footer-color: #7f8c8d;
             --link-color: #3498db;
+            --secondary-bg-color: #fff;
+            --status-down-color: #e74c3c;
         }
         @media (prefers-color-scheme: dark) {
             :root {
@@ -36,6 +38,7 @@
                 --footer-color: #888;
                 --link-color: #5dade2;
                 --secondary-bg-color: #27272a;
+                --status-down-color: #FF9185;
             }
             a,
             a:link,
@@ -125,11 +128,11 @@
             fill: #27ae60;
             justify-content: center;
          }
-        .status-down { color: #FF9185; 
+        .status-down { color: var(--status-down-color); 
             display: flex;
             align-items: center;
             gap: 5px;
-            fill: #FF9185;
+            fill: var(--status-down-color);
             justify-content: center;
         }
         .incidents {
@@ -154,14 +157,17 @@
         a:link,
         a:visited {
             cursor: pointer;
-            color: rgb(255, 255, 255);
+            color: var(--link-color);
             text-decoration: none !important;
+        }
+
+        .status-item h3, .icons a {
+            color: var(--text-color) !important;
         }
 
         a:hover {
             color: rgb(86, 86, 86);
         }
-
     </style>
 </head>
 <body>
