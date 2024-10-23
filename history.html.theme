@@ -23,13 +23,14 @@
         }
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #1a1a1a;
+                --bg-color: #18181b;
                 --text-color: #e0e0e0;
                 --heading-color: #b0b0b0;
-                --card-bg: #2a2a2a;
-                --card-shadow: rgba(255,255,255,0.1);
+                --card-bg: #27272a;
+                --card-shadow: rgba(9,9,11,0.4);
                 --footer-color: #888;
                 --link-color: #5dade2;
+                --secondary-bg-color: #27272a;
             }
         }
         body {
