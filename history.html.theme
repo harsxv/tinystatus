@@ -13,6 +13,7 @@
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&display=swap');
         :root {
             --bg-color: #f4f4f4;
             --text-color: #333;
@@ -23,6 +24,7 @@
             --link-color: #3498db;
             --secondary-bg-color: #fff;
             --status-down-color: #e74c3c;
+            --status-up-color: #166534
         }
         @media (prefers-color-scheme: dark) {
             :root {
@@ -35,10 +37,10 @@
                 --link-color: #5dade2;
                 --secondary-bg-color: #27272a;
                 --status-down-color: #FF9185;
+                --status-up-color: #27ae60;
             }
-        }
         body {
-            font-family: sans-serif;
+            font-family: "Golos Text", sans-serif;
             line-height: 1.6;
             color: var(--text-color);
             max-width: 1200px;
@@ -74,7 +76,7 @@
             display: flex;
             justify-content: space-between;
         }
-        .status-up { color: #27ae60; }
+        .status-up { color: var(--status-up-color); }
         .status-down { color: var(--status-down-color); }
         .footer {
             text-align: center;
