@@ -12,11 +12,9 @@
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
     <meta name="description" content="TinyStatus is a simple, customizable status page generator that allows you to monitor the status of various services and display them on a clean, responsive web page.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Golos+Text:wght@400..900&display=swap" rel="stylesheet">
 
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&display=swap');
         :root {
             --bg-color: #f4f4f4;
             --text-color: #333;
@@ -27,6 +25,7 @@
             --link-color: #3498db;
             --secondary-bg-color: #fff;
             --status-down-color: #e74c3c;
+            --status-up-color: #166534
         }
         @media (prefers-color-scheme: dark) {
             :root {
@@ -39,6 +38,7 @@
                 --link-color: #5dade2;
                 --secondary-bg-color: #27272a;
                 --status-down-color: #FF9185;
+                --status-up-color: #27ae60;
             }
             a,
             a:link,
@@ -121,11 +121,11 @@
             margin: 0 0 10px;
         }
         .status-up { 
-            color: #27ae60;
+            color: var(--status-up-color);
             display: flex;
             align-items: center;
             gap: 5px;
-            fill: #27ae60;
+            fill: var(--status-up-color);
             justify-content: center;
          }
         .status-down { color: var(--status-down-color); 
