@@ -28,11 +28,6 @@
       host: https://news.ycombinator.com
       expected_code: 200
 
-    - name: Google Home
-      type: http
-      host: https://www.google.com
-      expected_code: 200
-
 - title: 'Group 2'
   checks:
     - name: Cloudflare DNS Checker
@@ -53,6 +48,12 @@
       host: db.example.com
       port: 3306
 
+    - name: Google Home
+      type: http
+      host: https://www.google.com
+      expected_code: 200
+
+
 - title: 'Group 3'
   checks:
     - name: Amazon Web Services
@@ -68,11 +69,6 @@
     - name: Twitter
       type: http
       host: https://twitter.com
-      expected_code: 200
-
-    - name: Facebook Home
-      type: http
-      host: https://www.facebook.com
       expected_code: 200
 
     - name: Localhost
