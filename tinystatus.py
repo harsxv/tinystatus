@@ -1,6 +1,5 @@
 import os
-import time
-
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 from dotenv import load_dotenv
 import yaml
 import asyncio
@@ -12,6 +11,7 @@ from datetime import datetime
 import json
 import logging
 import platform
+import time
 
 # Load environment variables
 load_dotenv()
@@ -28,7 +28,7 @@ HISTORY_TEMPLATE_FILE = os.getenv('HISTORY_TEMPLATE_FILE', 'history.html.theme')
 STATUS_HISTORY_FILE = os.getenv('STATUS_HISTORY_FILE', 'history.json')
 HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY', os.getcwd())
 
-# Platform Idendifier
+# Platform Identifier
 PLATFORM = platform.system().lower()
 
 # Service check functions
@@ -170,26 +170,15 @@ async def monitor_services():
             return
         time_spent = int(time.monotonic() - start_ts)
         await asyncio.sleep(max(0, CHECK_INTERVAL - time_spent))
-
-
-# Main function
-def main():
-    with open(CHECKS_FILE, 'r') as f:
-        checks = yaml.safe_load(f)
-
-    with open(INCIDENTS_FILE, 'r') as f:
-        incidents = markdown.markdown(f.read())
-
-    with open(TEMPLATE_FILE, 'r') as f:
-        template = Template(f.read())
-
-    results = asyncio.run(run_checks(checks))
-    html = template.render(checks=results, incidents=incidents, last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    os.makedirs(HTML_OUTPUT_DIRECTORY, exist_ok=True)
-    with open(os.path.join(HTML_OUTPUT_DIRECTORY, 'index.html'), 'w') as f:
-        f.write(html)
+        
+def serve_files():
+    os.chdir(HTML_OUTPUT_DIRECTORY)
+    handler = SimpleHTTPRequestHandler
+    httpd = HTTPServer(('0.0.0.0', 8080), handler)
+    logging.info("Serving on port 8080")
+    httpd.serve_forever()
 
 if __name__ == "__main__":
     logging.basicConfig(level=getattr(logging, LOG_LEVEL), format='%(asctime)s - %(levelname)s - %(message)s')
     asyncio.run(monitor_services())
+    serve_files()
