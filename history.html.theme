@@ -23,7 +23,7 @@
             --footer-color: #7f8c8d;
             --link-color: #3498db;
             --secondary-bg-color: #fff;
-            --status-down-color: #e74c3c;
+            --status-down-color: #a52a2a;
             --status-up-color: #166534
         }
         @media (prefers-color-scheme: dark) {
@@ -36,7 +36,7 @@
                 --footer-color: #888;
                 --link-color: #5dade2;
                 --secondary-bg-color: #27272a;
-                --status-down-color: #FF9185;
+                --status-down-color: #FF9682;
                 --status-up-color: #27ae60;
             }
         body {
