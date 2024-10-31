@@ -21,10 +21,10 @@
             --heading-color: #2c3e50;
             --card-bg: #fff;
             --card-shadow: rgba(0,0,0,0.1);
-            --footer-color: #7f8c8d;
-            --link-color: #3498db;
+            --footer-color: #525252;
+            --link-color: #135686;
             --secondary-bg-color: #fff;
-            --status-down-color: #e74c3c;
+            --status-down-color: #a52a2a;
             --status-up-color: #166534
         }
         @media (prefers-color-scheme: dark) {
@@ -34,10 +34,10 @@
                 --heading-color: #b0b0b0;
                 --card-bg: #27272a;
                 --card-shadow: rgba(9,9,11,0.4);
-                --footer-color: #888;
+                --footer-color: #A3A3A3;
                 --link-color: #5dade2;
                 --secondary-bg-color: #27272a;
-                --status-down-color: #FF9185;
+                --status-down-color: #FF9682;
                 --status-up-color: #27ae60;
             }
             a,
