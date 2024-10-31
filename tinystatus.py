@@ -107,15 +107,20 @@ def save_history(history):
 
 
 def update_history(results):
-    # TODO: Configure groups in history page
     history = load_history()
     current_time = datetime.now().isoformat()
-    for group in results.keys():
-        for check in results[group]:
-            if check['name'] not in history:
-                history[check['name']] = []
-            history[check['name']].append({'timestamp': current_time, 'status': check['status']})
-            history[check['name']] = history[check['name']][-MAX_HISTORY_ENTRIES:]
+    if 'groups' not in history:
+        history['groups'] = []
+    for group_title, checks in results.items():
+        group_found = next((group for group in history['groups'] if group['title'] == group_title), None)
+        if group_found is None:
+            group_found = {'title': group_title, 'checks': {}}
+            history['groups'].append(group_found)
+        for check in checks:
+            if check['name'] not in group_found['checks']:
+                group_found['checks'][check['name']] = []
+            group_found['checks'][check['name']].append({'timestamp': current_time, 'status': check['status']})
+            group_found['checks'][check['name']] = group_found['checks'][check['name']][-MAX_HISTORY_ENTRIES:]
     save_history(history)
 
 
@@ -145,11 +150,13 @@ async def monitor_services():
 
             update_history(results)
 
+            history = load_history()
+
             html = template.render(groups=results, incidents=incidents, last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             with open(os.path.join(HTML_OUTPUT_DIRECTORY, 'index.html'), 'w') as f:
                 f.write(html)
 
-            history_html = history_template.render(history=load_history(), last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            history_html = history_template.render(history=history, last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             with open(os.path.join(HTML_OUTPUT_DIRECTORY, 'history.html'), 'w') as f:
                 f.write(history_html)
 

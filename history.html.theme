@@ -52,11 +52,13 @@
             color: var(--heading-color);
             text-align: center;
         }
+        .history-group {
+            margin-bottom: 40px;
+        }
         .history-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
-            margin-bottom: 40px;
         }
         .history-item {
             background: var(--card-bg);
@@ -66,7 +68,7 @@
             max-height: 300px;
             overflow: auto;
         }
-        .history-item h2 {
+        .history-item h3 {
             font-size: 1.2rem;
             margin: 0;
         }
@@ -93,21 +95,28 @@
 </head>
 <body>
     <h1>TinyStatus History</h1>
-    <div class="history-grid">
-        {% for service, entries in history.items() %}
-        <div class="history-item">
-            <h2>{{ service }}</h2>
-            {% for entry in entries|reverse %}
-            <div class="history-entry">
-                <span>{{ entry.timestamp.split('T')[0] }} {{ entry.timestamp.split('T')[1][:8] }}</span>
-                <span class="{% if entry.status %}status-up{% else %}status-down{% endif %}">
-                    {{ 'Up' if entry.status else 'Down' }}
-                </span>
+    
+    {% for group in history.groups %}
+    <div class="history-group">
+        <h2>{{ group.title }}</h2>
+        <div class="history-grid">
+            {% for service, entries in group.checks.items() %}
+            <div class="history-item">
+                <h3>{{ service }}</h3>
+                {% for entry in entries|reverse %}
+                <div class="history-entry">
+                    <span>{{ entry.timestamp.split('T')[0] }} {{ entry.timestamp.split('T')[1][:8] }}</span>
+                    <span class="{% if entry.status %}status-up{% else %}status-down{% endif %}">
+                        {{ 'Up' if entry.status else 'Down' }}
+                    </span>
+                </div>
+                {% endfor %}
             </div>
             {% endfor %}
         </div>
-        {% endfor %}
     </div>
+    {% endfor %}
+    
     <div class="footer">
         <p>Last updated: {{ last_updated }}</p>
         <p><a href="index.html">Back to Current Status</a></p>
