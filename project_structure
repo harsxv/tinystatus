@@ -1,0 +1,19 @@
+StatusWatch/
+├── app/
+│   ├── __init__.py
+│   ├── main.py           # FastAPI application
+│   ├── config.py         # Configuration
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── monitor.py    # Monitoring logic
+│   │   └── checks.py     # Check functions
+│   ├── static/
+│   │   ├── assets/       # Copy existing assets here
+│   │   ├── index.html
+│   │   └── history.html
+│   └── templates/        # Move theme files here
+│       ├── index.html.theme
+│       └── history.html.theme
+├── checks.yaml
+├── incidents.md
+└── requirements.txt 

@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StatusWatch History</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+    <link rel="manifest" href="/assets/site.webmanifest">
+    <link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#5bbad5">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap');
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --heading-color: #0f172a;
+            --card-bg: #ffffff;
+            --card-shadow: rgba(0,0,0,0.05);
+            --footer-color: #64748b;
+            --link-color: #3b82f6;
+            --status-down-color: #ef4444;
+            --status-up-color: #22c55e;
+            --chart-grid: #e2e8f0;
+            --timeline-bg: #f1f5f9;
+            --border-color: #e2e8f0;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0f172a;
+                --text-color: #e2e8f0;
+                --heading-color: #f8fafc;
+                --card-bg: #1e293b;
+                --card-shadow: rgba(0,0,0,0.3);
+                --footer-color: #94a3b8;
+                --link-color: #60a5fa;
+                --status-down-color: #f87171;
+                --status-up-color: #4ade80;
+                --chart-grid: #334155;
+                --timeline-bg: #1e293b;
+                --border-color: #334155;
+            }
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: var(--heading-color);
+            font-weight: 600;
+        }
+        .group-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px var(--card-shadow);
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .uptime-badge {
+            background: var(--status-up-color);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .service-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--timeline-bg);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 8px 0;
+            background: linear-gradient(45deg, var(--status-up-color), var(--link-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 24px;
+        }
+        .timeline-container {
+            margin-top: 24px;
+            padding: 20px;
+            background: var(--timeline-bg);
+            border-radius: 12px;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            transform: translateX(-20px);
+            opacity: 0;
+            animation: slideInRight 0.5s ease forwards;
+        }
+        @keyframes slideInRight {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .timeline-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 12px;
+            position: relative;
+        }
+        .timeline-status::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            top: -4px;
+            left: -4px;
+            animation: ripple 1.5s infinite;
+        }
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .status-up-dot {
+            background-color: var(--status-up-color);
+            color: var(--status-up-color);
+        }
+        .status-down-dot {
+            background-color: var(--status-down-color);
+            color: var(--status-down-color);
+        }
+        .controls {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-color);
+            padding: 16px 0;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .time-selector {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .time-selector:hover {
+            border-color: var(--link-color);
+        }
+        .refresh-button {
+            background: var(--link-color);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .refresh-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--footer-color);
+            margin-top: 48px;
+            padding: 24px 0;
+            border-top: 1px solid var(--border-color);
+        }
+        .footer a {
+            color: var(--link-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .failures-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px var(--card-shadow);
+            border: 1px solid var(--status-down-color);
+            animation: fadeIn 0.5s ease;
+        }
+        .failures-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .failure-card {
+            background: var(--timeline-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--status-down-color);
+            animation: slideIn 0.3s ease;
+        }
+        .failure-card h3 {
+            color: var(--status-down-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .failure-time {
+            font-size: 0.9em;
+            color: var(--footer-color);
+        }
+        .failure-group {
+            font-size: 0.9em;
+            background: var(--card-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .recent-errors {
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        .recent-errors table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .recent-errors th,
+        .recent-errors td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .recent-errors th {
+            background: var(--timeline-bg);
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+
+        .recent-errors tr:last-child td {
+            border-bottom: none;
+        }
+
+        .recent-errors tr:hover td {
+            background: var(--timeline-bg);
+        }
+
+        .error-duration {
+            color: var(--status-down-color);
+        }
+
+        .failures-section {
+            margin-top: 40px;
+            margin-bottom: 40px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px var(--card-shadow);
+        }
+
+        .failures-section h2 {
+            margin-top: 0;
+            color: var(--status-down-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .failures-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .failures-table th,
+        .failures-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .failures-table th {
+            font-weight: 600;
+            color: var(--heading-color);
+            background: var(--timeline-bg);
+        }
+
+        .failures-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .failures-table tr:hover td {
+            background: var(--timeline-bg);
+        }
+
+        .failures-table .duration {
+            color: var(--status-down-color);
+            font-weight: 500;
+        }
+
+        .failures-table .response-time {
+            font-family: monospace;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 500;
+            background: var(--status-down-color);
+            color: white;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--link-color);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px var(--card-shadow);
+        }
+
+        .nav-link.active {
+            background: var(--link-color);
+            color: var(--card-bg);
+            border-color: var(--link-color);
+        }
+
+        .nav-link.active:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .error-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .error-modal-content {
+            position: relative;
+            background: var(--card-bg);
+            margin: 5% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--card-shadow);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        .error-modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .error-modal-header h3 {
+            margin: 0;
+            color: var(--status-down-color);
+        }
+
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .close-modal:hover {
+            opacity: 1;
+        }
+
+        .error-modal-body {
+            padding: 20px;
+        }
+
+        .error-info {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .error-row {
+            display: flex;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .error-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .error-row .label {
+            width: 150px;
+            font-weight: 500;
+            color: var(--heading-color);
+        }
+
+        .error-row .value {
+            flex: 1;
+        }
+
+        .error-details {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .error-details h4 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--heading-color);
+        }
+
+        .error-details pre {
+            margin: 0;
+            padding: 12px;
+            background: var(--card-bg);
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Make failures clickable */
+        .failures-table tr {
+            cursor: pointer;
+        }
+
+        .failures-table tr:hover td {
+            background: var(--timeline-bg);
+        }
+
+        .view-details-btn {
+            background: var(--link-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .view-details-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px var(--card-shadow);
+        }
+
+        .view-details-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .failures-table td {
+            vertical-align: middle;
+        }
+
+        .failures-table td:last-child {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 500;
+            background: var(--status-down-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="/assets/apple-touch-icon.png" alt="Logo"/>
+                <h1>StatusWatch</h1>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="/history" class="nav-link active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    History
+                </a>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="controls-group">
+                <select id="timeRange" class="time-selector">
+                    <option value="1">Last 1 Hour</option>
+                    <option value="6">Last 6 Hours</option>
+                    <option value="12">Last 12 Hours</option>
+                    <option value="24" selected>Last 24 Hours</option>
+                    <option value="72">Last 3 Days</option>
+                    <option value="168">Last 7 Days</option>
+                </select>
+                
+                <select id="refreshInterval" class="time-selector">
+                    <option value="0">Manual Refresh</option>
+                    <option value="30">30 Seconds</option>
+                    <option value="60">1 Minute</option>
+                    <option value="300">5 Minutes</option>
+                    <option value="600">10 Minutes</option>
+                </select>
+                
+                <button onclick="refreshData()" class="refresh-button">
+                    <span>Refresh Data</span>
+                </button>
+            </div>
+            <div id="next-refresh" class="refresh-indicator"></div>
+        </div>
+
+        <div id="charts-container">
+            {% for group_name, services in grouped_history.items() %}
+            {% set safe_group_name = group_name | replace(' ', '-') %}
+            <div class="group-container" style="animation-delay: {{ loop.index * 0.1 }}s">
+                <div class="group-header">
+                    <h2>{{ group_name }}</h2>
+                    <span class="uptime-badge" id="uptime-badge-{{ safe_group_name }}">{{ uptimes[group_name] }}% Uptime</span>
+                </div>
+                
+                <div class="service-stats">
+                    {% for service_name, data in services.items() %}
+                    {% set safe_service_name = service_name | replace(' ', '-') %}
+                    <div class="stat-card">
+                        <div>{{ service_name }}</div>
+                        <div class="stat-value" id="uptime-{{ safe_service_name }}">
+                            Calculating...
+                        </div>
+                        <div>Uptime</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="chart-container">
+                    <div id="chart-{{ safe_group_name }}"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="failures-section">
+            <h2>Current Failures</h2>
+            <div class="failures-container">
+                <table class="failures-table">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Group</th>
+                            <th>Down Since</th>
+                            <th>Duration</th>
+                            <th>Response Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="failures-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Last updated: <span id="last-updated">{{ last_updated }}</span></p>
+            <p><a href="/">Back to Current Status</a></p>
+            <p>Powered by <a href="https://github.com/yourusername/StatusWatch">StatusWatch</a></p>
+        </div>
+    </div>
+
+    <div id="errorModal" class="error-modal">
+        <div class="error-modal-content">
+            <div class="error-modal-header">
+                <h3>Error Details</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="error-modal-body">
+                <div class="error-info">
+                    <div class="error-row">
+                        <span class="label">Service:</span>
+                        <span id="errorService" class="value"></span>
+                    </div>
+                    <div class="error-row">
+                        <span class="label">Group:</span>
+                        <span id="errorGroup" class="value"></span>
+                    </div>
+                    <div class="error-row">
+                        <span class="label">Status:</span>
+                        <span id="errorStatus" class="value"></span>
+                    </div>
+                    <div class="error-row">
+                        <span class="label">Time:</span>
+                        <span id="errorTime" class="value"></span>
+                    </div>
+                    <div class="error-row">
+                        <span class="label">Duration:</span>
+                        <span id="errorDuration" class="value"></span>
+                    </div>
+                    <div class="error-row">
+                        <span class="label">Response Time:</span>
+                        <span id="errorResponseTime" class="value"></span>
+                    </div>
+                </div>
+                <div class="error-details">
+                    <h4>Extra Data</h4>
+                    <pre id="errorPayload"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+        let refreshTimer = null;
+        let nextRefreshTime = null;
+
+        // User preferences
+        const PREFS_KEY = 'tinystatus_preferences';
+
+        function savePreferences() {
+            const prefs = {
+                timeRange: document.getElementById('timeRange').value,
+                refreshInterval: document.getElementById('refreshInterval').value
+            };
+            localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+        }
+
+        function loadPreferences() {
+            try {
+                const prefs = JSON.parse(localStorage.getItem(PREFS_KEY));
+                if (prefs) {
+                    if (prefs.timeRange) {
+                        document.getElementById('timeRange').value = prefs.timeRange;
+                    }
+                    if (prefs.refreshInterval) {
+                        document.getElementById('refreshInterval').value = prefs.refreshInterval;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading preferences:', error);
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('timeRange').addEventListener('change', refreshData);
+        document.getElementById('refreshInterval').addEventListener('change', updateRefreshInterval);
+
+        function updateRefreshInterval() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+
+            const interval = parseInt(document.getElementById('refreshInterval').value);
+            const indicator = document.getElementById('next-refresh');
+
+            if (interval > 0) {
+                refreshTimer = setInterval(refreshData, interval * 1000);
+                nextRefreshTime = new Date(Date.now() + interval * 1000);
+
+                // Update countdown
+                const updateCountdown = () => {
+                    const now = new Date();
+                    const diff = Math.max(0, Math.ceil((nextRefreshTime - now) / 1000));
+                    indicator.textContent = `Next refresh in ${diff} seconds`;
+                    indicator.style.display = 'block';
+                };
+
+                updateCountdown();
+                setInterval(updateCountdown, 1000);
+            } else {
+                if (indicator) {
+                    indicator.style.display = 'none';
+                }
+            }
+
+            savePreferences();
+        }
+
+        // Chart functions
+        function createApexChart(elementId, datasets, groupName) {
+            const options = {
+                series: datasets,
+                chart: {
+                    type: 'line',
+                    height: 350,
+                    background: 'transparent',
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800,
+                        animateGradually: {
+                            enabled: true,
+                            delay: 150
+                        }
+                    },
+                    toolbar: {
+                        show: false
+                    },
+                    zoom: {
+                        enabled: false
+                    }
+                },
+                stroke: {
+                    curve: 'stepline',
+                    width: 3,
+                    lineCap: 'round'
+                },
+                markers: {
+                    size: 4,
+                    strokeWidth: 2,
+                    hover: {
+                        size: 6
+                    }
+                },
+                grid: {
+                    show: true,
+                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--border-color'),
+                    strokeDashArray: 3,
+                    padding: {
+                        top: 10,
+                        right: 10,
+                        bottom: 10,
+                        left: 10
+                    }
+                },
+                xaxis: {
+                    type: 'datetime',
+                    labels: {
+                        datetimeUTC: false,
+                        style: {
+                            colors: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+                            fontSize: '12px'
+                        },
+                        format: 'HH:mm'
+                    },
+                    tooltip: {
+                        enabled: false
+                    }
+                },
+                yaxis: {
+                    min: 0,
+                    max: 100,
+                    tickAmount: 2,
+                    labels: {
+                        formatter: function(val) {
+                            return val === 100 ? 'Up' : val === 0 ? 'Down' : '';
+                        },
+                        style: {
+                            colors: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+                            fontSize: '12px'
+                        }
+                    }
+                },
+                tooltip: {
+                    x: {
+                        format: 'MMM dd, HH:mm:ss'
+                    },
+                    y: {
+                        formatter: function(val, { seriesIndex, dataPointIndex, w }) {
+                            const series = w.config.series[seriesIndex];
+                            const point = series.data[dataPointIndex];
+                            const status = val === 100 ? 'Up' : 'Down';
+                            const responseTime = point.response_time.toFixed(3);
+                            return `
+                                <div class="tooltip-content">
+                                    <div class="status ${status.toLowerCase()}">${status}</div>
+                                    <div class="response-time">Response: ${responseTime}s</div>
+                                </div>
+                            `;
+                        }
+                    },
+                    theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+                    style: {
+                        fontSize: '12px'
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    horizontalAlign: 'center',
+                    fontSize: '14px',
+                    markers: {
+                        width: 12,
+                        height: 12,
+                        strokeWidth: 0,
+                        radius: 12
+                    },
+                    itemMargin: {
+                        horizontal: 15
+                    },
+                    onItemClick: {
+                        toggleDataSeries: false
+                    },
+                    labels: {
+                        colors: getComputedStyle(document.documentElement).getPropertyValue('--text-color')
+                    }
+                }
+            };
+
+            return new ApexCharts(document.querySelector(elementId), options);
+        }
+
+        async function fetchData(hours = 24) {
+            try {
+                const response = await fetch(`/api/history?hours=${hours}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        async function refreshData() {
+            const hours = document.getElementById('timeRange').value;
+            await updateCharts(hours);
+            savePreferences();
+        }
+
+        async function updateCharts(hours = 24) {
+            try {
+                const data = await fetchData(hours);
+                if (!data) return;
+
+                const { history: groupedHistory, uptimes } = data;
+
+                // Clear existing charts
+                Object.values(charts).forEach(chart => {
+                    if (chart && typeof chart.destroy === 'function') {
+                        chart.destroy();
+                    }
+                });
+                charts = {};
+
+                for (const [groupName, services] of Object.entries(groupedHistory)) {
+                    const safeGroupName = groupName.replace(/\s+/g, '-');
+                    const chartContainer = document.querySelector(`#chart-${safeGroupName}`);
+                    
+                    if (!chartContainer) continue;
+
+                    const datasets = Object.entries(services).map(([serviceName, data], index) => {
+                        const color = ['#3b82f6', '#22c55e', '#8b5cf6', '#ef4444', '#f1c40f'][index % 5];
+                        
+                        // Calculate individual service uptime
+                        const upCount = data.filter(point => point.y === 1).length;
+                        const serviceUptime = (upCount / data.length * 100).toFixed(1);
+                        
+                        // Update service uptime display
+                        const uptimeElement = document.querySelector(`#uptime-${serviceName.replace(/\s+/g, '-')}`);
+                        if (uptimeElement) {
+                            uptimeElement.textContent = `${serviceUptime}%`;
+                        }
+
+                        return {
+                            name: serviceName,
+                            data: data.map(point => ({
+                                x: new Date(point.x).getTime(),
+                                y: point.y ? 100 : 0,
+                                response_time: point.response_time
+                            })),
+                            color: color
+                        };
+                    });
+
+                    if (datasets.length > 0) {
+                        const chart = createApexChart(`#chart-${safeGroupName}`, datasets, safeGroupName);
+                        charts[safeGroupName] = chart;
+                        chart.render();
+                    }
+
+                    // Update group uptime
+                    const uptimeElement = document.querySelector(`#uptime-badge-${safeGroupName}`);
+                    if (uptimeElement && uptimes[groupName] !== undefined) {
+                        uptimeElement.textContent = `${uptimes[groupName].toFixed(1)}% Uptime`;
+                    }
+                }
+
+                // Update last updated time
+                const lastUpdatedElement = document.querySelector('#last-updated');
+                if (lastUpdatedElement) {
+                    lastUpdatedElement.textContent = new Date().toLocaleString();
+                }
+
+                // Update failures table
+                updateFailuresTable(groupedHistory);
+
+            } catch (error) {
+                console.error('Error updating charts:', error);
+            }
+        }
+
+        function updateFailuresTable(groupedHistory) {
+            const tbody = document.getElementById('failures-tbody');
+            const failuresSection = document.querySelector('.failures-section');
+            let hasFailures = false;
+
+            if (tbody) {
+                tbody.innerHTML = '';
+
+                for (const [groupName, services] of Object.entries(groupedHistory)) {
+                    for (const [serviceName, data] of Object.entries(services)) {
+                        if (!data || data.length === 0) continue;
+
+                        const latestEntry = data[data.length - 1];
+                        if (latestEntry && latestEntry.y === 0) {
+                            hasFailures = true;
+                            let failureStart = latestEntry.x;
+                            for (let i = data.length - 2; i >= 0; i--) {
+                                if (data[i].y === 1) {
+                                    failureStart = data[i + 1].x;
+                                    break;
+                                }
+                            }
+
+                            const row = document.createElement('tr');
+                            const startTime = moment(failureStart);
+                            
+                            // Store the data as a data attribute
+                            row.dataset.errorData = JSON.stringify({
+                                serviceName,
+                                groupName,
+                                timestamp: failureStart,
+                                responseTime: latestEntry.response_time,
+                                extraData: latestEntry.extra_data || {}
+                            });
+
+                            row.innerHTML = `
+                                <td>${serviceName}</td>
+                                <td>${groupName}</td>
+                                <td data-timestamp="${startTime.toISOString()}">${startTime.format('MMM D, HH:mm:ss')}</td>
+                                <td class="duration" data-start="${startTime.toISOString()}">Calculating...</td>
+                                <td class="response-time">${latestEntry.response_time.toFixed(3)}s</td>
+                                <td>
+                                    <span class="status-badge">Down</span>
+                                    <button class="view-details-btn" title="View Details">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            `;
+
+                            // Add click handlers
+                            const viewButton = row.querySelector('.view-details-btn');
+                            viewButton.addEventListener('click', (e) => {
+                                e.stopPropagation(); // Prevent row click
+                                const errorData = JSON.parse(row.dataset.errorData);
+                                console.log('errorData');
+                                console.log(errorData);
+                                showErrorDetails(errorData.serviceName, errorData.groupName, errorData);
+                            });
+
+                            tbody.appendChild(row);
+                        }
+                    }
+                }
+
+                failuresSection.style.display = hasFailures ? 'block' : 'none';
+                updateFailureDurations();
+            }
+        }
+
+        function updateFailureDurations() {
+            const durationCells = document.querySelectorAll('.duration');
+            durationCells.forEach(cell => {
+                const startTime = moment(cell.dataset.start);
+                if (startTime.isValid()) {
+                    const duration = moment.duration(moment().diff(startTime));
+                    cell.textContent = duration.humanize();
+                }
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPreferences();
+            refreshData();
+            updateRefreshInterval();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+            }
+        });
+
+        // Update durations every minute
+        setInterval(updateFailureDurations, 60000);
+
+        function showErrorDetails(serviceName, groupName, data) {
+            const modal = document.getElementById('errorModal');
+            
+            // Update modal content
+            document.getElementById('errorService').textContent = serviceName;
+            document.getElementById('errorGroup').textContent = groupName;
+            document.getElementById('errorGroup').textContent = groupName;
+            document.getElementById('errorStatus').textContent = 'Down';
+            document.getElementById('errorTime').textContent = moment(data.timestamp).format('MMMM D, YYYY HH:mm:ss');
+            document.getElementById('errorDuration').textContent = moment.duration(moment().diff(moment(data.timestamp))).humanize();
+            document.getElementById('errorResponseTime').textContent = `${data.responseTime.toFixed(3)}s`;
+            
+            try {
+                const extraData = data.extra_data ? JSON.parse(data.extra_data) : {};
+                document.getElementById('errorPayload').textContent = JSON.stringify(extraData, null, 2);
+            } catch (e) {
+                document.getElementById('errorPayload').textContent = data.extra_data || 'No extra data available';
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        // Add click handler to failure rows
+        function addFailureClickHandlers() {
+            const rows = document.querySelectorAll('.failures-table tbody tr');
+            rows.forEach(row => {
+                row.addEventListener('click', () => {
+                    const serviceName = row.cells[0].textContent;
+                    const groupName = row.cells[1].textContent;
+                    const timestamp = row.querySelector('[data-timestamp]').dataset.timestamp;
+                    
+                    // Find the corresponding data point
+                    const data = findDataPoint(serviceName, groupName, timestamp);
+                    console.log(data);
+                    if (data) {
+                        console.log('row clicked');
+                        console.log(data, serviceName, groupName);
+                        showErrorDetails(serviceName, groupName, data);
+                    }
+                });
+            });
+        }
+
+        function findDataPoint(serviceName, groupName, timestamp) {
+            const groupedHistory = window.historyData; // Store this when fetching data
+            if (groupedHistory?.[groupName]?.[serviceName]) {
+                return groupedHistory[groupName][serviceName].find(point => 
+                    point.x === timestamp && point.y === 0
+                );
+            }
+            return null;
+        }
+
+        // Close modal handlers
+        document.querySelector('.close-modal').onclick = function() {
+            document.getElementById('errorModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('errorModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,138 +1,304 @@
-<div align="center" width="100%">
-    <img src="./assets/android-chrome-192x192.png" width="128" alt="" />
+<div align="center">
+  <h1>StatusWatch</h1>
+  <p>A modern, FastAPI-powered status page with unified monitoring capabilities</p>
 </div>
 
-# TinyStatus
-TinyStatus is a simple, customizable status page generator that allows you to monitor the status of various services and display them on a clean, responsive web page.
+## Architecture
 
-Check out an online demo https://status.harry.id
-
-| Light Mode | Dark Mode | 
-|-|-|
-| ![Light](https://github.com/user-attachments/assets/3ea7b55e-397f-4f7c-8189-64b74a03594b) | ![Dark](https://github.com/user-attachments/assets/92072f9e-1031-4f07-8392-1111df57453a) |
-
+```mermaid
+graph TD
+    A[StatusWatch Service] --> B[FastAPI Server]
+    B --> C[Monitor Service]
+    C --> D[Service Checks]
+    D --> F[HTTP Checks]
+    D --> G[Ping Checks]
+    D --> H[Port Checks]
+    C --> I[SQLite Database]
+    B --> J[Status Page]
+    B --> K[History Page]
+    B --> L[API Endpoints]
+```
 
 ## Features
 
-- Monitor HTTP endpoints, ping hosts, and check open ports
-- Responsive design for both status page and history page
-- Customizable service checks via YAML configuration
-- Incident history tracking
-- Automatic status updates at configurable intervals
-- Supports both light and dark themes
-- Supports grouping
-- Cards clickable (optional)
+- 🚀 Async monitoring with FastAPI
+- 📊 Unified monitoring system
+- 🔍 Multiple check types (HTTP, Ping, Port)
+- 📈 Time-series history tracking
+- 🌐 RESTful API endpoints
+- 📱 Responsive web interface
+- 🔄 Real-time status updates
+- 📊 Uptime calculations
+- 🎯 Service grouping
+- ⏰ Configurable check intervals
+- 🔍 Detailed error inspection
+- 📊 Interactive charts
+- 🌓 Dark mode support
+- ⚡ Performance optimizations
+- 🔄 Configurable auto-refresh
+- 📱 Mobile-first design
 
-## Prerequisites
+## Quick Start
 
-- Python 3.11 or higher
-- pip (Python package manager)
+### Using Python
 
-## Installation
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/StatusWatch.git
+cd StatusWatch
+```
 
-1. Clone the repository or download the source code:
-   ```
-   git clone https://github.com/harsxv/tinystatus.git
-   cd tinystatus
-   ```
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
+3. Configure your environment:
+```env
+MONITOR_CONTINUOUSLY=True
+CHECK_INTERVAL=30
+MAX_HISTORY_ENTRIES=100
+LOG_LEVEL=INFO
+PRIMARY_DATABASE_URL=sqlite:///path/to/your/database.db
+```
 
-## Configuration
+4. Configure your services in `checks.yaml`:
+```yaml
+- title: 'Infrastructure'
+  checks:
+    - name: Main Website
+      type: http
+      host: https://example.com
+      expected_code: 200
 
-1. Create a `.env` file in the project root and customize the variables:
-   ```
-   MONITOR_CONTINOUSLY=True
-   CHECK_INTERVAL=30
-   MAX_HISTORY_ENTRIES=100
-   LOG_LEVEL=INFO
-   CHECKS_FILE=checks.yaml
-   INCIDENTS_FILE=incidents.md
-   TEMPLATE_FILE=index.html.theme
-   HISTORY_TEMPLATE_FILE=history.html.theme
-   STATUS_HISTORY_FILE=history.json
-   HTML_OUTPUT_DIRECTORY=/var/www/htdocs/status/
-   ```
+    - name: Database
+      type: port
+      host: db.example.com
+      port: 5432
+```
 
-2. Edit the `checks.yaml` file to add or modify the services you want to monitor.
-   Example:
-   ```yaml
-    - title: 'Group 1'
-      checks:
-        - name: GitHub Home
-          type: http
-          host: https://github.com
-          url: https://docs.github.com/en
-          expected_code: 200
+5. Run the server:
+```bash
+python run.py
+```
 
-        - name: Google Public DNS
-          type: ping
-          host: 8.8.8.8
+## Database Schema
 
-        - name: Dummy MySQL Database
-          type: port
-          host: db.example.com
-          port: 3306
+```mermaid
+erDiagram
+    ServiceHealthCheck {
+        int id PK
+        string hostname
+        string local_ip
+        string public_ip
+        string service_group
+        string service_name
+        string status
+        float response_time
+        text url
+        text extra_data
+        datetime timestamp
+    }
+```
 
-       - name: Home Server with Self-Signed Certs
-          type: http
-          host: https://homeserver.local
-          ssc: True
-          expected_code: 200
-   ```
+## API Endpoints
 
-3. (Optional) Customize the `incidents.md` file to add any known incidents or maintenance schedules.
+| Endpoint | Method | Description | Parameters |
+|----------|--------|-------------|------------|
+| `/api/status` | GET | Current status of all services | None |
+| `/api/history` | GET | Historical data for all services | `hours` (default: 24) |
+| `/api/history/{group_name}` | GET | Historical data for a group | `hours` (default: 24) |
+| `/api/reset-db` | POST | Reset the database | None |
 
-4. (Optional) Modify the `index.html.theme` and `history.html.theme` files to customize the look and feel of your status pages.
+## Check Types
 
-## Usage
+### HTTP Check
+```yaml
+- name: Website
+  type: http
+  host: https://example.com
+  expected_code: 200
+  ssc: false  # Self-signed certificate
+```
 
-1. Run the TinyStatus script:
-   ```
-   python tinystatus.py
-   ```
+### Ping Check
+```yaml
+- name: Server
+  type: ping
+  host: server.example.com
+```
 
-2. The script will generate three files:
-   - `index.html`: The main status page
-   - `history.html`: The status history page
-   - `history.json`: The status history and timestamp data
+### Port Check
+```yaml
+- name: Database
+  type: port
+  host: db.example.com
+  port: 5432
+```
 
-3. To keep the status page continuously updated, you can run the script in the background:
-   - On Unix-like systems (Linux, macOS):
-     ```
-     nohup python tinystatus.py &
-     ```
-   - On Windows, you can use the Task Scheduler to run the script at startup.
+## Data Flow
 
-4. Serve the generated HTML files using your preferred web server (e.g., Apache, NGINX, or a simple Python HTTP server for testing).
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as FastAPI App
+    participant M as Monitor Service
+    participant D as Database
+    participant S as Services
 
-## Using Docker
+    C->>A: Request Status
+    A->>M: Get Current Status
+    M->>S: Check Services
+    M->>D: Store Results
+    M->>A: Return Results
+    A->>C: Display Status
 
-In order to run the script using Docker:
+    C->>A: Request History
+    A->>M: Get History
+    M->>D: Query History
+    M->>A: Return History
+    A->>C: Display History
+```
 
-   ```
-    docker build -t tinystatus .
-    docker run -ti --rm --name tinystatus -v "$PWD":/usr/src/myapp -w /usr/src/myapp tinystatus
-   ```
+## Configuration Options
 
-## Customization
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `MONITOR_CONTINUOUSLY` | Enable continuous monitoring | `True` |
+| `CHECK_INTERVAL` | Seconds between checks | `30` |
+| `MAX_HISTORY_ENTRIES` | Maximum history entries | `100` |
+| `PRIMARY_DATABASE_URL` | Database connection URL | `sqlite:///status_history.db` |
 
-- Adjust the configuration variables in the `.env` file to customize the behavior of TinyStatus.
-- Customize the appearance of the status page by editing the CSS in `index.html.theme` and `history.html.theme`.
-- Add or remove services by modifying the `checks.yaml` file.
+## Development
 
-## Porting TinyStatus
+### Project Structure
+```
+StatusWatch/
+├── app/
+│   ├── main.py           # FastAPI application
+│   ├── config.py         # Configuration
+│   ├── database.py       # Database models
+│   └── services/
+│       ├── monitor.py    # Monitoring logic
+│       └── checks.py     # Check implementations
+├── checks.yaml           # Service configuration
+└── incidents.md          # Incident reports
+```
 
-TinyStatus porting are available in:
-- Go: https://github.com/annihilatorrrr/gotinystatus
+### Running Tests
+```bash
+pytest tests/
+```
+
+## Browser Support
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (latest)
+
+## Changelog
+
+### Version 1.1.0 (Latest)
+- 🎨 Improved UI/UX across all pages
+- 📊 Enhanced chart visualization with:
+  - Different line patterns for services
+  - Smaller, clearer data points
+  - Better color contrast
+  - Interactive tooltips
+  - Zoom and pan capabilities
+- 🔍 Added detailed error inspection:
+  - Modal view for error details
+  - Full error payload display
+  - Response time tracking
+  - Duration calculations
+- ⚡ Performance improvements:
+  - Optimized database queries
+  - Added response caching
+  - Better error handling
+- 🎛️ Added configurable refresh intervals
+- 📱 Improved mobile responsiveness
+- 🌓 Enhanced dark mode support
+- 🧭 Added navigation between status and history pages
+- 📈 Improved history page with:
+  - Time range selection
+  - Service filtering
+  - Better uptime calculations
+  - Current failures summary
+- 🔄 Added auto-refresh capabilities
+- 💾 Added database reset functionality
+
+### Version 1.0.0 (Initial Release)
+- Basic status monitoring
+- Service grouping
+- Simple history tracking
+- Basic UI
+- HTTP, Ping, and Port checks
+- SQLite database storage
+- Basic API endpoints
+
+## Advanced Usage
+
+### Error Inspection
+Click the "View Details" button on any failed service to see:
+- Detailed error information
+- Response times
+- Duration of failure
+- Full error payload
+- Service history
+
+### Chart Interaction
+The history charts support:
+- Zooming in/out
+- Panning
+- Service toggling
+- Time range selection
+- Tooltip information
+
+### Auto-refresh Options
+Configure automatic updates with intervals:
+- 30 seconds
+- 1 minute
+- 5 minutes
+- 10 minutes
+- Manual refresh option
+
+## API Response Examples
+
+### Status Response
+```json
+{
+  "Group 1": [
+    {
+      "name": "Website",
+      "status": true,
+      "response_time": 0.234,
+      "url": "https://example.com"
+    }
+  ]
+}
+```
+
+### History Response
+```json
+{
+  "history": {
+    "Group 1": {
+      "Website": [
+        {
+          "x": "2024-01-01T12:00:00",
+          "y": 1,
+          "response_time": 0.234
+        }
+      ]
+    }
+  },
+  "uptimes": {
+    "Group 1": 99.9
+  }
+}
+```
 
 ## Contributing
-
-[Contributions](https://github.com/harsxv/tinystatus/contribute) are, of course, most welcome!
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
-
-This project is open source and available under the [MIT License](LICENSE).
+MIT License - see [LICENSE](LICENSE) for details

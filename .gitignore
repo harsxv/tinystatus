@@ -1,5 +1,105 @@
-index.html
-history.html
-history.json
-nohup.out
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
 .env
+.venv
+ibl-status-app/
+.python-version
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+status_history.db
+
+# Logs
+*.log
+logs/
+log/
+
+# Local configuration
+checks.yaml
+local_settings.py
+instance/
+
+# System files
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.temp
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Project specific
+incidents.local.md
+checks.local.yaml
+.env.local
+.env.development
+.env.production

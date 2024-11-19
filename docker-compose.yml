@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  StatusWatch:
+    build: .
+    container_name: statuswatch
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./checks.yaml:/usr/src/app/checks.yaml
+      - ./incidents.md:/usr/src/app/incidents.md
+    environment:
+      - MONITOR_CONTINOUSLY=True
+      - CHECK_INTERVAL=30
+      - PORT=8080
+    restart: unless-stopped 

@@ -1,12 +1,10 @@
-FROM python:3-alpine
-WORKDIR /usr/src/app
+FROM python:3.11-slim
 
-COPY checks.yaml \
-     history.html.theme \
-     incidents.md \
-     index.html.theme \
-     requirements.txt \
-     tinystatus.py ./
+WORKDIR /app
 
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-CMD [ "python", "/usr/src/app/tinystatus.py" ]
+
+COPY . .
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

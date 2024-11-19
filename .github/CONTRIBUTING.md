@@ -1,9 +1,9 @@
-# Contributing to TinyStatus
-Thank you for considering contributing to TinyStatus! We welcome contributions from everyone. Here are some guidelines to help you get started.
+# Contributing to StatusWatch
+Thank you for considering contributing to StatusWatch! We welcome contributions from everyone. Here are some guidelines to help you get started.
 
 ## Hacktoberfest Participation
 
-We are excited to participate in [Hacktoberfest](https://hacktoberfest.com)! To join the Hacktoberfest vibes and contribute to TinyStatus, here’s what you need to know to participate and complete Hacktoberfest:
+We are excited to participate in [Hacktoberfest](https://hacktoberfest.com)! To join the Hacktoberfest vibes and contribute to StatusWatch, here’s what you need to know to participate and complete Hacktoberfest:
 
 1. Register anytime between September 23 and October 31
 Pull/merge requests can be made in any GitHub or GitLab hosted project that’s participating in Hacktoberfest (look for the “hacktoberfest” topic)
@@ -11,7 +11,7 @@ Pull/merge requests can be made in any GitHub or GitLab hosted project that’s 
 3. You’ll unlock a digital badge when you register for Hacktoberfest, and level it up with each of your four pull/merge requests accepted during Hacktoberfest
 4. Join the Hacktoberfest Discord server to meet other participants and share your Hacktoberfest love with a blog or post on socials.
 
-Happy coding and thank you for contributing to TinyStatus during Hacktoberfest!
+Happy coding and thank you for contributing to StatusWatch during Hacktoberfest!
 
 
 
@@ -20,7 +20,7 @@ Happy coding and thank you for contributing to TinyStatus during Hacktoberfest!
 1. **Fork the repository**: Click the "Fork" button at the top right of the repository page.
 2. **Clone your fork**: 
     ```sh
-    git clone https://github.com/harsxv/tinystatus.git
+    git clone https://github.com/harsxv/StatusWatch.git
     ```
 3. **Create a branch**: 
     ```sh

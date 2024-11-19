@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StatusWatch</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+    <link rel="manifest" href="/assets/site.webmanifest">
+    <link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#5bbad5">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap');
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --heading-color: #0f172a;
+            --card-bg: #ffffff;
+            --card-shadow: rgba(0,0,0,0.05);
+            --footer-color: #64748b;
+            --link-color: #3b82f6;
+            --status-down-color: #ef4444;
+            --status-up-color: #22c55e;
+            --border-color: #e2e8f0;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0f172a;
+                --text-color: #e2e8f0;
+                --heading-color: #f8fafc;
+                --card-bg: #1e293b;
+                --card-shadow: rgba(0,0,0,0.3);
+                --footer-color: #94a3b8;
+                --link-color: #60a5fa;
+                --status-down-color: #f87171;
+                --status-up-color: #4ade80;
+                --border-color: #334155;
+            }
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.5s ease;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            width: 50px;
+            height: 50px;
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--link-color);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px var(--card-shadow);
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .group-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px var(--card-shadow);
+            border: 1px solid var(--border-color);
+            animation: slideIn 0.5s ease;
+        }
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .group-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: var(--bg-color);
+            transition: all 0.3s ease;
+        }
+        .service-item:hover {
+            transform: translateX(5px);
+        }
+        .service-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .service-name .link-icon {
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+        .service-name:hover .link-icon {
+            opacity: 1;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-up {
+            background: var(--status-up-color);
+            color: white;
+        }
+        .status-down {
+            background: var(--status-down-color);
+            color: white;
+        }
+        .incidents {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px var(--card-shadow);
+            border: 1px solid var(--border-color);
+            animation: slideIn 0.5s ease;
+        }
+        .incidents h2 {
+            color: var(--heading-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .footer {
+            text-align: center;
+            color: var(--footer-color);
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease;
+        }
+        .footer a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .service-link {
+            color: var(--link-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .service-link:hover {
+            background: var(--link-color);
+            color: var(--card-bg);
+        }
+        .service-link svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="/assets/apple-touch-icon.png" alt="Logo"/>
+                <h1>StatusWatch</h1>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="/history" class="nav-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    History
+                </a>
+            </div>
+        </div>
+
+        <div class="status-grid">
+            {% for group, checks in groups.items() %}
+            <div class="group-container">
+                <div class="group-header">
+                    <h2 class="group-title">{{ group }}</h2>
+                </div>
+                {% for check in checks %}
+                <div class="service-item">
+                    <div class="service-name">
+                        {% if check.url %}
+                        <a href="{{ check.url }}" target="_blank" class="service-link">
+                            {{ check.name }}
+                            <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                        </a>
+                        {% else %}
+                        {{ check.name }}
+                        {% endif %}
+                    </div>
+                    <span class="status-badge {% if check.status %}status-up{% else %}status-down{% endif %}">
+                        {% if check.status %}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+                        </svg>
+                        Operational
+                        {% else %}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/>
+                        </svg>
+                        Down
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="incidents">
+            <h2>Incident History</h2>
+            {{ incidents | safe }}
+        </div>
+
+        <div class="footer">
+            <p>Last updated: {{ last_updated }}</p>
+        </div>
+    </div>
+</body>
+</html>
