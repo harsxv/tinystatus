@@ -651,6 +651,27 @@
             50% { opacity: 1; }
             100% { opacity: 0.6; }
         }
+
+        .group-title-container {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .group-title {
+            font-weight: 700;
+            color: var(--heading-color);
+            margin: 0;
+        }
+
+        .group-ip {
+            font-size: 0.9em;
+            color: var(--footer-color);
+            font-family: monospace;
+            background: var(--timeline-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -708,11 +729,20 @@
 
         <div id="charts-container">
             {% for group_name, services in grouped_history.items() %}
-            {% set safe_group_name = group_name | replace(' ', '-') %}
+                {% set safe_group_name = group_name | replace(' ', '-') %}
+            {% set display_name = group_name.split('#')[0] if '#' in group_name else group_name %}
+            {% set ip = group_name.split('#', 1)[1] if '#' in group_name else None %}
             <div class="group-container" style="animation-delay: {{ loop.index * 0.1 }}s">
                 <div class="group-header">
-                    <h2>{{ group_name }}</h2>
-                    <span class="uptime-badge" id="uptime-badge-{{ safe_group_name }}">{{ uptimes[group_name] }}% Uptime</span>
+                    <div class="group-title-container">
+                        <h2 class="group-title">{{ display_name }}</h2>
+                        {% if ip %}3
+                        <span class="group-ip">{{ ip }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="uptime-badge" id="uptime-badge-{{ group_name | replace(' ', '-') }}">
+                        {{ uptimes[group_name] }}% Uptime
+                    </span>
                 </div>
                 
                 <div class="service-stats">
@@ -1027,7 +1057,6 @@
                 for (const [groupName, services] of Object.entries(groupedHistory)) {
                     const safeGroupName = groupName.replace(/\s+/g, '-');
                     const chartContainer = document.querySelector(`#chart-${safeGroupName}`);
-                    
                     if (!chartContainer) continue;
 
                     const datasets = Object.entries(services).map(([serviceName, data], index) => {

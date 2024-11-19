@@ -124,6 +124,7 @@ class StatusMonitor:
         self.db.commit()
 
     def get_combined_history(self, hours: int = 24) -> Tuple[Dict, Dict]:
+        """Get combined history from all services"""
         cutoff = datetime.utcnow() - timedelta(hours=hours)
         
         results = (
@@ -137,21 +138,29 @@ class StatusMonitor:
         uptimes = {}
         
         for result in results:
-            if result.service_group not in grouped_history:
-                grouped_history[result.service_group] = {}
-                uptimes[result.service_group] = []
+            # Format group name to include IP if available
+            group_name = result.service_group
+            if result.local_ip and result.local_ip != "0.0.0.0":
+                group_name = f"{result.service_group}#{result.local_ip}"
+            elif result.public_ip and result.public_ip != "0.0.0.0":
+                group_name = f"{result.service_group}#{result.public_ip}"
             
-            if result.service_name not in grouped_history[result.service_group]:
-                grouped_history[result.service_group][result.service_name] = []
+            if group_name not in grouped_history:
+                grouped_history[group_name] = {}
+                uptimes[group_name] = []
+            
+            if result.service_name not in grouped_history[group_name]:
+                grouped_history[group_name][result.service_name] = []
             
             entry = {
                 'x': result.timestamp.isoformat(),
                 'y': 1 if result.status.lower() == "up" else 0,
-                'response_time': result.response_time
+                'response_time': result.response_time,
+                'extra_data': result.extra_data
             }
             
-            grouped_history[result.service_group][result.service_name].append(entry)
-            uptimes[result.service_group].append(result.status.lower() == "up")
+            grouped_history[group_name][result.service_name].append(entry)
+            uptimes[group_name].append(result.status.lower() == "up")
         
         # Calculate uptimes
         for group_name in uptimes:

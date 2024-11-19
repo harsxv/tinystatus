@@ -1,8 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
-
-
+import json
 import markdown
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -15,19 +14,44 @@ from .services.monitor import StatusMonitor
 # Setup FastAPI app
 app = FastAPI(title="StatusWatch")
 settings = get_settings()
-
-# Mount static files
 app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
-
-# Setup templates
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
-
-# Initialize monitor
 monitor = StatusMonitor()
 
 
-# Background task for continuous monitoring
+def sort_groups(data: dict) -> dict:
+    """Sort groups with IBL groups first, then others"""
+    ibl_groups = {k: v for k, v in data.items() if k.lower().startswith("ibl-")}
+    other_groups = {k: v for k, v in data.items() if not k.lower().startswith("ibl-")}
+
+    sorted_data = {}
+    sorted_data.update(dict(sorted(ibl_groups.items())))
+    sorted_data.update(dict(sorted(other_groups.items())))
+    return sorted_data
+
+
+def format_group_display(group_name: str) -> tuple:
+    """Split group name into display name and IP if available"""
+    if "#" in group_name:
+        name, ip = group_name.split("#", 1)
+        return name.strip(), ip.strip()
+    return group_name.strip(), None
+
+
+def get_url_from_status(status_data: dict) -> str:
+    """Extract URL from status extra data"""
+    try:
+        if extra_data := status_data.get("extra_data"):
+            data = json.loads(extra_data)
+            if data.get("type") == "http":
+                return data.get("host")
+    except:
+        pass
+    return None
+
+
 async def continuous_monitoring():
+    """Background task for continuous monitoring"""
     while True:
         try:
             await monitor.check_all_services()
@@ -43,51 +67,36 @@ async def startup_event():
         asyncio.create_task(continuous_monitoring())
 
 
-# Routes
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Home page showing current status of all services"""
     try:
-        # Get current status and history
-        grouped_history, uptimes = monitor.get_combined_history(
-            hours=24
-        )  # Get last 24 hours
-
-        # Get incidents
+        grouped_history, uptimes = monitor.get_combined_history(hours=24)
         with open(monitor.settings.INCIDENTS_FILE, "r") as f:
-            incidents_content = f.read()
-        incidents_html = markdown.markdown(incidents_content)
+            incidents_html = markdown.markdown(f.read())
 
-        # Sort groups - IBL groups first, then others
-        sorted_groups = {}
-        ibl_groups = {
-            k: v for k, v in grouped_history.items() if k.lower().startswith("ibl-")
-        }
-        other_groups = {
-            k: v for k, v in grouped_history.items() if not k.lower().startswith("ibl-")
-        }
-
-        # Sort each dictionary by keys and combine
-        sorted_groups.update(dict(sorted(ibl_groups.items())))
-        sorted_groups.update(dict(sorted(other_groups.items())))
-
-        # Format groups for template - use latest status from history
+        sorted_groups = sort_groups(grouped_history)
         groups = {}
+
         for group_name, services in sorted_groups.items():
-            groups[group_name] = []
+            display_name, ip = format_group_display(group_name)
+            groups[group_name] = {
+                "info": {"display": display_name, "ip": ip},
+                "services": [],
+            }
+
             for service_name, history_data in services.items():
                 latest_status = (
                     history_data[-1] if history_data else {"y": 1, "response_time": 0}
                 )
-                groups[group_name].append(
+                groups[group_name]["services"].append(
                     {
                         "name": service_name,
-                        "status": latest_status["y"] == 1,  # Convert to boolean
-                        "url": None,  # URL can be added if needed
+                        "status": latest_status["y"] == 1,
+                        "url": get_url_from_status(latest_status),
                         "response_time": latest_status.get("response_time", 0),
                     }
                 )
-
         return templates.TemplateResponse(
             "index.html.theme",
             {
@@ -107,26 +116,14 @@ async def index(request: Request):
 async def history(
     request: Request, hours: int = Query(24, description="Hours of history to show")
 ):
+    """History page showing service status over time"""
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
+    sorted_history = sort_groups(grouped_history)
 
-    # Sort groups - IBL groups first, then others
-    sorted_history = {}
-    ibl_groups = {
-        k: v for k, v in grouped_history.items() if k.lower().startswith("ibl-")
+    sorted_uptimes = {
+        group_name: uptimes.get(group_name, 100.0)
+        for group_name in sorted_history.keys()
     }
-    other_groups = {
-        k: v for k, v in grouped_history.items() if not k.lower().startswith("ibl-")
-    }
-
-    # Sort each dictionary by keys and combine
-    sorted_history.update(dict(sorted(ibl_groups.items())))
-    sorted_history.update(dict(sorted(other_groups.items())))
-
-    # Sort uptimes to match
-    sorted_uptimes = {}
-    for group_name in sorted_history.keys():
-        sorted_uptimes[group_name] = uptimes.get(group_name, 100.0)
-
     return templates.TemplateResponse(
         "history.html.theme",
         {
@@ -139,50 +136,22 @@ async def history(
     )
 
 
-# API endpoints
 @app.get("/api/status")
 async def get_status():
     """Get current status of all services"""
     current_status = await monitor.check_all_services()
-
-    # Sort groups - IBL groups first, then others
-    sorted_status = {}
-    ibl_groups = {
-        k: v for k, v in current_status.items() if k.lower().startswith("ibl-")
-    }
-    other_groups = {
-        k: v for k, v in current_status.items() if not k.lower().startswith("ibl-")
-    }
-
-    # Sort each dictionary by keys and combine
-    sorted_status.update(dict(sorted(ibl_groups.items())))
-    sorted_status.update(dict(sorted(other_groups.items())))
-
-    return sorted_status
+    return sort_groups(current_status)
 
 
 @app.get("/api/history")
 async def get_history(hours: int = Query(24, description="Hours of history to return")):
     """Get historical data for all services"""
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
-
-    # Sort groups - IBL groups first, then others
-    sorted_history = {}
-    ibl_groups = {
-        k: v for k, v in grouped_history.items() if k.lower().startswith("ibl-")
+    sorted_history = sort_groups(grouped_history)
+    sorted_uptimes = {
+        group_name: uptimes.get(group_name, 100.0)
+        for group_name in sorted_history.keys()
     }
-    other_groups = {
-        k: v for k, v in grouped_history.items() if not k.lower().startswith("ibl-")
-    }
-
-    # Sort each dictionary by keys and combine
-    sorted_history.update(dict(sorted(ibl_groups.items())))
-    sorted_history.update(dict(sorted(other_groups.items())))
-
-    # Sort uptimes to match
-    sorted_uptimes = {}
-    for group_name in sorted_history.keys():
-        sorted_uptimes[group_name] = uptimes.get(group_name, 100.0)
 
     return {
         "history": sorted_history,
@@ -192,9 +161,7 @@ async def get_history(hours: int = Query(24, description="Hours of history to re
 
 
 @app.get("/api/history/{group_name}")
-async def get_group_history(
-    group_name: str, hours: int = Query(24, description="Hours of history to return")
-):
+async def get_group_history(group_name: str, hours: int = Query(24)):
     """Get historical data for a specific group"""
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
     if group_name not in grouped_history:
@@ -209,6 +176,7 @@ async def get_group_history(
 
 @app.post("/api/reset-db")
 async def reset_database():
+    """Reset the database"""
     try:
         monitor.reset_database()
         return JSONResponse(
@@ -220,18 +188,13 @@ async def reset_database():
 
 @app.get("/health")
 async def health_check():
-    """
-    Health check endpoint for monitoring the service status.
-    Returns:
-        JSONResponse: Health status with timestamp and version
-    """
+    """Health check endpoint"""
     try:
-        # Basic application health check
         return JSONResponse(
             content={
                 "status": "healthy",
                 "timestamp": datetime.utcnow().isoformat(),
-                "version": "1.1.0",  # Match with CHANGELOG version
+                "version": "1.1.0",
                 "database": "connected" if monitor.db else "disconnected",
                 "monitor_status": "running"
                 if monitor.settings.MONITOR_CONTINUOUSLY

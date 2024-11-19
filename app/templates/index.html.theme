@@ -241,6 +241,28 @@
             font-size: 0.9em;
             font-weight: 500;
         }
+        .group-title-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .group-title {
+            font-weight: 700;
+            color: var(--heading-color);
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .group-ip {
+            font-size: 0.9em;
+            color: var(--footer-color);
+            font-family: monospace;
+            background: var(--timeline-bg);
+            padding: 4px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -268,14 +290,18 @@
         </div>
 
         <div class="status-grid">
-            {% for group_name, services in groups.items() %}
+            {% for group_name, content in groups.items() %}
             <div class="group-container">
                 <div class="group-header">
-                    <h2 class="group-title">{{ group_name }}</h2>
-                    {% set group_uptime = (services|selectattr("status", "equalto", true)|list|length / services|length * 100)|round(1) %}
-                    <span class="uptime-badge">{{ group_uptime }}% Uptime</span>
+                    <div class="group-title-container">
+                        <h2 class="group-title">{{ content.info.display }}</h2>
+                        {% if content.info.ip %}
+                        <span class="group-ip">{{ content.info.ip }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="uptime-badge">{{ uptimes[group_name] }}% Uptime</span>
                 </div>
-                {% for service in services %}
+                {% for service in content.services %}
                 <div class="service-item">
                     <div class="service-name">
                         {% if service.url %}
@@ -288,7 +314,7 @@
                             </svg>
                         </a>
                         {% else %}
-                        {{ service.name }}
+                        <span class="service-name-text">{{ service.name }}</span>
                         {% endif %}
                         {% if service.response_time %}
                         <span class="response-time">{{ "%.3f"|format(service.response_time) }}s</span>
