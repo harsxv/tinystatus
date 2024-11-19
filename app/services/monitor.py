@@ -16,6 +16,7 @@ class StatusMonitor:
         self._cache = {}
         self._cache_time = None
         self._cache_duration = timedelta(seconds=30)
+        self._start_time = datetime.utcnow()
 
     def load_checks(self) -> List[Dict]:
         with open(self.settings.CHECKS_FILE, 'r') as f:

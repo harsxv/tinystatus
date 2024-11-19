@@ -114,4 +114,36 @@ async def reset_database():
         monitor.reset_database()
         return JSONResponse(content={"message": "Database reset successful"}, status_code=200)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint for monitoring the service status.
+    Returns:
+        JSONResponse: Health status with timestamp and version
+    """
+    try:
+        # Basic application health check
+        return JSONResponse(
+            content={
+                "status": "healthy",
+                "timestamp": datetime.utcnow().isoformat(),
+                "version": "1.1.0",  # Match with CHANGELOG version
+                "database": "connected" if monitor.db else "disconnected",
+                "monitor_status": "running" if monitor.settings.MONITOR_CONTINUOUSLY else "stopped",
+                "last_check": monitor._cache_time.isoformat() if monitor._cache_time else None,
+                "uptime": (datetime.utcnow() - monitor._start_time).total_seconds() if hasattr(monitor, '_start_time') else 0
+            },
+            status_code=200
+        )
+    except Exception as e:
+        logging.error(f"Health check failed: {str(e)}")
+        return JSONResponse(
+            content={
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            },
+            status_code=503
+        ) 
