@@ -32,8 +32,8 @@ def sort_groups(data: dict) -> dict:
 
 def format_group_display(group_name: str) -> tuple:
     """Split group name into display name and IP if available"""
-    if "#" in group_name:
-        name, ip = group_name.split("#", 1)
+    if monitor.SERVER_SEPARATOR in group_name:
+        name, ip = group_name.split(monitor.SERVER_SEPARATOR, 1)
         return name.strip(), ip.strip()
     return group_name.strip(), None
 
@@ -105,6 +105,7 @@ async def index(request: Request):
                 "uptimes": uptimes,
                 "incidents": incidents_html,
                 "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "SERVER_SEPARATOR": monitor.SERVER_SEPARATOR
             },
         )
     except Exception as e:
@@ -132,6 +133,7 @@ async def history(
             "uptimes": sorted_uptimes,
             "timeframe": f"Last {hours} hours",
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "SERVER_SEPARATOR": monitor.SERVER_SEPARATOR
         },
     )
 

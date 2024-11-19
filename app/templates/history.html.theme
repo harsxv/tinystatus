@@ -730,8 +730,8 @@
         <div id="charts-container">
             {% for group_name, services in grouped_history.items() %}
                 {% set safe_group_name = group_name | replace(' ', '-') %}
-            {% set display_name = group_name.split('#')[0] if '#' in group_name else group_name %}
-            {% set ip = group_name.split('#', 1)[1] if '#' in group_name else None %}
+            {% set display_name = group_name.split(SERVER_SEPARATOR)[0] if SERVER_SEPARATOR in group_name else group_name %}
+            {% set ip = group_name.split(SERVER_SEPARATOR, 1)[1] if SERVER_SEPARATOR in group_name else None %}
             <div class="group-container" style="animation-delay: {{ loop.index * 0.1 }}s">
                 <div class="group-header">
                     <div class="group-title-container">
@@ -740,7 +740,7 @@
                         <span class="group-ip">{{ ip }}</span>
                         {% endif %}
                     </div>
-                    <span class="uptime-badge" id="uptime-badge-{{ group_name | replace(' ', '-') }}">
+                    <span class="uptime-badge" data-uptime-badge="{{ group_name | replace(' ', '-') }}">
                         {{ uptimes[group_name] }}% Uptime
                     </span>
                 </div>
@@ -759,7 +759,7 @@
                 </div>
 
                 <div class="chart-container">
-                    <div id="chart-{{ safe_group_name }}"></div>
+                    <div data-chart-group="{{ safe_group_name }}"></div>
                 </div>
             </div>
             {% endfor %}
@@ -1056,7 +1056,7 @@
 
                 for (const [groupName, services] of Object.entries(groupedHistory)) {
                     const safeGroupName = groupName.replace(/\s+/g, '-');
-                    const chartContainer = document.querySelector(`#chart-${safeGroupName}`);
+    const chartContainer = document.querySelector(`[data-chart-group="${safeGroupName}"]`);
                     if (!chartContainer) continue;
 
                     const datasets = Object.entries(services).map(([serviceName, data], index) => {
@@ -1084,13 +1084,13 @@
                     });
 
                     if (datasets.length > 0) {
-                        const chart = createApexChart(`#chart-${safeGroupName}`, datasets, safeGroupName);
+                        const chart = createApexChart(`[data-chart-group="${safeGroupName}"]`, datasets, safeGroupName);
                         charts[safeGroupName] = chart;
                         chart.render();
                     }
 
                     // Update group uptime
-                    const uptimeElement = document.querySelector(`#uptime-badge-${safeGroupName}`);
+                    const uptimeElement = document.querySelector(`[data-uptime-badge="${safeGroupName}"]`);
                     if (uptimeElement && uptimes[groupName] !== undefined) {
                         uptimeElement.textContent = `${uptimes[groupName].toFixed(1)}% Uptime`;
                     }
