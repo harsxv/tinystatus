@@ -184,17 +184,21 @@
             color: var(--status-down-color);
         }
         .controls {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: var(--bg-color);
-            padding: 16px 0;
-            margin-bottom: 24px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             gap: 12px;
-            backdrop-filter: blur(10px);
+            margin-bottom: 24px;
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px var(--card-shadow);
+        }
+        .controls-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .time-selector {
             padding: 8px 16px;
@@ -625,6 +629,28 @@
             background: var(--status-down-color);
             color: white;
         }
+
+        .refresh-indicator-container {
+            width: 100%;
+            text-align: center;
+            min-height: 24px;
+        }
+
+        .refresh-indicator {
+            color: var(--footer-color);
+            font-size: 0.9em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--timeline-bg);
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
     </style>
 </head>
 <body>
@@ -674,7 +700,10 @@
                     <span>Refresh Data</span>
                 </button>
             </div>
-            <div id="next-refresh" class="refresh-indicator"></div>
+            
+            <div class="refresh-indicator-container">
+                <div id="next-refresh" class="refresh-indicator"></div>
+            </div>
         </div>
 
         <div id="charts-container">

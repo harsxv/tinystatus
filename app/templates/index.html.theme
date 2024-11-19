@@ -224,6 +224,23 @@
             height: 16px;
             stroke: currentColor;
         }
+        .response-time {
+            font-size: 0.9em;
+            color: var(--footer-color);
+            margin-left: 8px;
+            padding: 2px 6px;
+            background: var(--timeline-bg);
+            border-radius: 4px;
+        }
+
+        .uptime-badge {
+            background: var(--status-up-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -251,17 +268,19 @@
         </div>
 
         <div class="status-grid">
-            {% for group, checks in groups.items() %}
+            {% for group_name, services in groups.items() %}
             <div class="group-container">
                 <div class="group-header">
-                    <h2 class="group-title">{{ group }}</h2>
+                    <h2 class="group-title">{{ group_name }}</h2>
+                    {% set group_uptime = (services|selectattr("status", "equalto", true)|list|length / services|length * 100)|round(1) %}
+                    <span class="uptime-badge">{{ group_uptime }}% Uptime</span>
                 </div>
-                {% for check in checks %}
+                {% for service in services %}
                 <div class="service-item">
                     <div class="service-name">
-                        {% if check.url %}
-                        <a href="{{ check.url }}" target="_blank" class="service-link">
-                            {{ check.name }}
+                        {% if service.url %}
+                        <a href="{{ service.url }}" target="_blank" class="service-link">
+                            {{ service.name }}
                             <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                 <polyline points="15 3 21 3 21 9"></polyline>
@@ -269,11 +288,14 @@
                             </svg>
                         </a>
                         {% else %}
-                        {{ check.name }}
+                        {{ service.name }}
+                        {% endif %}
+                        {% if service.response_time %}
+                        <span class="response-time">{{ "%.3f"|format(service.response_time) }}s</span>
                         {% endif %}
                     </div>
-                    <span class="status-badge {% if check.status %}status-up{% else %}status-down{% endif %}">
-                        {% if check.status %}
+                    <span class="status-badge {% if service.status %}status-up{% else %}status-down{% endif %}">
+                        {% if service.status %}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
                         </svg>

@@ -43,20 +43,50 @@ async def startup_event():
 # Routes
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    results = await monitor.check_all_services()
-    
-    with open(settings.INCIDENTS_FILE, 'r') as f:
-        incidents = markdown.markdown(f.read())
-    
-    return templates.TemplateResponse(
-        "index.html.theme",
-        {
-            "request": request,
-            "groups": results,
-            "incidents": incidents,
-            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-    )
+    """Home page showing current status of all services"""
+    try:
+        # Get current status
+        current_status = await monitor.check_all_services()
+        
+        # Get incidents
+        with open(monitor.settings.INCIDENTS_FILE, 'r') as f:
+            incidents_content = f.read()
+        incidents_html = markdown.markdown(incidents_content)
+
+        # Sort groups - IBL groups first, then others
+        sorted_groups = {}
+        ibl_groups = {k: v for k, v in current_status.items() if k.lower().startswith('ibl-')}
+        other_groups = {k: v for k, v in current_status.items() if not k.lower().startswith('ibl-')}
+        
+        # Sort each dictionary by keys and combine
+        sorted_groups.update(dict(sorted(ibl_groups.items())))
+        sorted_groups.update(dict(sorted(other_groups.items())))
+
+        # Format groups for template
+        groups = {}
+        for group_name, services in sorted_groups.items():
+            groups[group_name] = [
+                {
+                    "name": service["name"],
+                    "status": service["status"],
+                    "url": service.get("url"),
+                    "response_time": service.get("response_time", 0)
+                }
+                for service in services
+            ]
+
+        return templates.TemplateResponse(
+            "index.html.theme",
+            {
+                "request": request,
+                "groups": groups,
+                "incidents": incidents_html,
+                "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error rendering index: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/history", response_class=HTMLResponse)
 async def history(
@@ -65,12 +95,26 @@ async def history(
 ):
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
     
+    # Sort groups - IBL groups first, then others
+    sorted_history = {}
+    ibl_groups = {k: v for k, v in grouped_history.items() if k.lower().startswith('ibl-')}
+    other_groups = {k: v for k, v in grouped_history.items() if not k.lower().startswith('ibl-')}
+    
+    # Sort each dictionary by keys and combine
+    sorted_history.update(dict(sorted(ibl_groups.items())))
+    sorted_history.update(dict(sorted(other_groups.items())))
+    
+    # Sort uptimes to match
+    sorted_uptimes = {}
+    for group_name in sorted_history.keys():
+        sorted_uptimes[group_name] = uptimes.get(group_name, 100.0)
+    
     return templates.TemplateResponse(
         "history.html.theme",
         {
             "request": request,
-            "grouped_history": grouped_history,
-            "uptimes": uptimes,
+            "grouped_history": sorted_history,
+            "uptimes": sorted_uptimes,
             "timeframe": f"Last {hours} hours",
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -80,15 +124,41 @@ async def history(
 @app.get("/api/status")
 async def get_status():
     """Get current status of all services"""
-    return await monitor.check_all_services()
+    current_status = await monitor.check_all_services()
+    
+    # Sort groups - IBL groups first, then others
+    sorted_status = {}
+    ibl_groups = {k: v for k, v in current_status.items() if k.lower().startswith('ibl-')}
+    other_groups = {k: v for k, v in current_status.items() if not k.lower().startswith('ibl-')}
+    
+    # Sort each dictionary by keys and combine
+    sorted_status.update(dict(sorted(ibl_groups.items())))
+    sorted_status.update(dict(sorted(other_groups.items())))
+    
+    return sorted_status
 
 @app.get("/api/history")
 async def get_history(hours: int = Query(24, description="Hours of history to return")):
     """Get historical data for all services"""
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
+    
+    # Sort groups - IBL groups first, then others
+    sorted_history = {}
+    ibl_groups = {k: v for k, v in grouped_history.items() if k.lower().startswith('ibl-')}
+    other_groups = {k: v for k, v in grouped_history.items() if not k.lower().startswith('ibl-')}
+    
+    # Sort each dictionary by keys and combine
+    sorted_history.update(dict(sorted(ibl_groups.items())))
+    sorted_history.update(dict(sorted(other_groups.items())))
+    
+    # Sort uptimes to match
+    sorted_uptimes = {}
+    for group_name in sorted_history.keys():
+        sorted_uptimes[group_name] = uptimes.get(group_name, 100.0)
+    
     return {
-        "history": grouped_history,
-        "uptimes": uptimes,
+        "history": sorted_history,
+        "uptimes": sorted_uptimes,
         "timeframe": f"Last {hours} hours"
     }
 
