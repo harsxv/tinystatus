@@ -984,7 +984,7 @@
                             return `
                                 <div class="tooltip-content">
                                     <div class="status ${status.toLowerCase()}">${status}</div>
-                                    <div class="response-time">Response: ${responseTime}s</div>
+                                    <div class="response-time">Response: ${responseTime}ms</div>
                                 </div>
                             `;
                         }
@@ -1245,7 +1245,7 @@
             document.getElementById('errorStatus').textContent = 'Down';
             document.getElementById('errorTime').textContent = moment(data.timestamp).format('MMMM D, YYYY HH:mm:ss');
             document.getElementById('errorDuration').textContent = moment.duration(moment().diff(moment(data.timestamp))).humanize();
-            document.getElementById('errorResponseTime').textContent = `${data.responseTime.toFixed(3)}s`;
+            document.getElementById('errorResponseTime').textContent = `${data.responseTime.toFixed(3)}ms`;
             
             try {
                 const extraData = data.extra_data ? JSON.parse(data.extra_data) : {};
