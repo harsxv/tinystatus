@@ -44,6 +44,7 @@ def createuser(username, password):
         user.set_password(password)
         
         db.add(user)
+        user.generate_token()
         db.commit()
         
         click.echo(f"Created user: {username}")
@@ -327,28 +328,50 @@ def status():
 def enable():
     """Enable authentication"""
     env_file = '.env'
-    load_dotenv(env_file)
-    
-    set_key(env_file, 'AUTH_ENABLED', 'true')
-    click.echo("Authentication enabled")
-    click.echo("Please restart the application for changes to take effect")
-    
-    # Check if there are any users
-    db = next(get_db())
-    if db.query(User).count() == 0:
-        click.echo("\nWarning: No users exist. Create a user with:")
-        click.echo("python manage.py createuser")
+    try:
+        # Check if we can write to the file
+        try:
+            with open(env_file, 'a') as f:
+                pass
+        except (IOError, PermissionError):
+            click.echo(f"Error: Cannot write to {env_file}. Please check permissions.", err=True)
+            return
+
+        load_dotenv(env_file)
+        set_key(env_file, 'AUTH_ENABLED', 'true')
+        click.echo("Authentication enabled")
+        click.echo("Please restart the application for changes to take effect")
+        
+        # Check if there are any users
+        db = next(get_db())
+        if db.query(User).count() == 0:
+            click.echo("\nWarning: No users exist. Create a user with:")
+            click.echo("python manage.py createuser")
+    except Exception as e:
+        click.echo(f"Error enabling authentication: {str(e)}", err=True)
+        click.echo("\nTip: You can manually set AUTH_ENABLED=true in your environment")
 
 @auth.command()
 def disable():
     """Disable authentication"""
     if click.confirm('Are you sure you want to disable authentication? This will make your instance public!'):
         env_file = '.env'
-        load_dotenv(env_file)
-        
-        set_key(env_file, 'AUTH_ENABLED', 'false')
-        click.echo("Authentication disabled")
-        click.echo("Please restart the application for changes to take effect")
+        try:
+            # Check if we can write to the file
+            try:
+                with open(env_file, 'a') as f:
+                    pass
+            except (IOError, PermissionError):
+                click.echo(f"Error: Cannot write to {env_file}. Please check permissions.", err=True)
+                return
+
+            load_dotenv(env_file)
+            set_key(env_file, 'AUTH_ENABLED', 'false')
+            click.echo("Authentication disabled")
+            click.echo("Please restart the application for changes to take effect")
+        except Exception as e:
+            click.echo(f"Error disabling authentication: {str(e)}", err=True)
+            click.echo("\nTip: You can manually set AUTH_ENABLED=false in your environment")
 
 @auth.command()
 def setup():
@@ -356,32 +379,52 @@ def setup():
     click.echo("StatusWatch Authentication Setup")
     click.echo("-" * 30)
     
-    # Enable auth
+    # Check if we can write to .env
     env_file = '.env'
-    load_dotenv(env_file)
-    set_key(env_file, 'AUTH_ENABLED', 'true')
+    try:
+        try:
+            with open(env_file, 'a') as f:
+                pass
+        except (IOError, PermissionError):
+            click.echo(f"Warning: Cannot write to {env_file}. Authentication settings must be set manually.", err=True)
+            click.echo("Please set AUTH_ENABLED=true in your environment")
+    except Exception as e:
+        click.echo(f"Warning: {str(e)}", err=True)
     
-    # Create admin user if none exists
-    db = next(get_db())
-    if db.query(User).count() == 0:
-        click.echo("\nNo users exist. Let's create an admin user.")
-        username = click.prompt("Username")
-        password = click.prompt("Password", hide_input=True, confirmation_prompt=True)
+    try:
+        # Enable auth if we can
+        if os.access(env_file, os.W_OK):
+            load_dotenv(env_file)
+            set_key(env_file, 'AUTH_ENABLED', 'true')
         
-        user = User(username=username)
-        user.set_password(password)
-        db.add(user)
-        db.commit()
+        # Create admin user if none exists
+        db = next(get_db())
+        if db.query(User).count() == 0:
+            click.echo("\nNo users exist. Let's create an admin user.")
+            username = click.prompt("Username")
+            password = click.prompt("Password", hide_input=True, confirmation_prompt=True)
+            
+            user = User(username=username)
+            user.set_password(password)
+            db.add(user)
+            db.commit()
+            
+            # Generate API token
+            token = user.generate_token()
+            db.commit()
+            
+            click.echo("\nUser created successfully!")
+            click.echo(f"API Token: {token}")
         
-        # Generate API token
-        token = user.generate_token()
-        db.commit()
-        
-        click.echo("\nUser created successfully!")
-        click.echo(f"API Token: {token}")
-    
-    click.echo("\nAuthentication setup complete!")
-    click.echo("Please restart the application for changes to take effect")
+        click.echo("\nAuthentication setup complete!")
+        if os.access(env_file, os.W_OK):
+            click.echo("Please restart the application for changes to take effect")
+        else:
+            click.echo("\nNote: You need to manually set AUTH_ENABLED=true in your environment")
+            
+    except Exception as e:
+        click.echo(f"Error during setup: {str(e)}", err=True)
+        click.echo("\nTip: You can manually configure authentication settings in your environment")
 
 @cli.group()
 def db():
