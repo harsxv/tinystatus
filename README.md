@@ -3,25 +3,10 @@
   <p>A modern, FastAPI-powered status page with unified monitoring capabilities</p>
 </div>
 
-## Architecture
-
-```mermaid
-graph TD
-    A[StatusWatch Service] --> B[FastAPI Server]
-    B --> C[Monitor Service]
-    C --> D[Service Checks]
-    D --> F[HTTP Checks]
-    D --> G[Ping Checks]
-    D --> H[Port Checks]
-    C --> I[SQLite Database]
-    B --> J[Status Page]
-    B --> K[History Page]
-    B --> L[API Endpoints]
-```
-
 ## Features
 
 - 🚀 Async monitoring with FastAPI
+- 🔒 Authentication and API token support
 - 📊 Unified monitoring system
 - 🔍 Multiple check types (HTTP, Ping, Port)
 - 📈 Time-series history tracking
@@ -30,22 +15,17 @@ graph TD
 - 🔄 Real-time status updates
 - 📊 Uptime calculations
 - 🎯 Service grouping
-- ⏰ Configurable check intervals
-- 🔍 Detailed error inspection
-- 📊 Interactive charts
-- 🌓 Dark mode support
 - ⚡ Performance optimizations
-- 🔄 Configurable auto-refresh
-- 📱 Mobile-first design
+- 🌓 Dark mode support
 
 ## Quick Start
 
-### Using Python
+### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/StatusWatch.git
-cd StatusWatch
+git clone https://github.com/yourusername/statuswatch.git
+cd statuswatch
 ```
 
 2. Install dependencies:
@@ -59,10 +39,129 @@ MONITOR_CONTINUOUSLY=True
 CHECK_INTERVAL=30
 MAX_HISTORY_ENTRIES=100
 LOG_LEVEL=INFO
-PRIMARY_DATABASE_URL=sqlite:///path/to/your/database.db
+PRIMARY_DATABASE_URL=sqlite:///status_history.db
+AUTH_ENABLED=True
 ```
 
-4. Configure your services in `checks.yaml`:
+4. Initialize the database and create an admin user:
+```bash
+python manage.py initdb
+python manage.py auth setup
+```
+
+## Authentication
+
+StatusWatch supports two types of authentication:
+- Basic Authentication for web interface
+- Token Authentication for API access
+
+### Managing Authentication
+
+Enable/disable authentication:
+```bash
+# Show current auth status
+python manage.py auth status
+
+# Enable authentication
+python manage.py auth enable
+
+# Disable authentication
+python manage.py auth disable
+
+# Interactive setup
+python manage.py auth setup
+```
+
+### User Management
+
+Create and manage users:
+```bash
+# Create a new user
+python manage.py createuser
+
+# Create API token
+python manage.py token create username --expires 30
+
+# Revoke token
+python manage.py token revoke username
+
+# Show token info
+python manage.py token info username
+
+# List all users and tokens
+python manage.py token list
+```
+
+### API Authentication
+
+Use Bearer token authentication for API requests:
+```bash
+curl -H "Authorization: Bearer your-api-token" http://localhost:8000/api/status
+```
+
+### Web Authentication
+
+Use Basic authentication for web interface:
+```bash
+curl -u username:password http://localhost:8000/
+```
+
+## API Endpoints
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/status` | GET | Token | Current status of all services |
+| `/api/history` | GET | Token | Historical data for all services |
+| `/api/history/{group_name}` | GET | Token | Historical data for a group |
+| `/health` | GET | None | Service health check |
+
+## Management Commands
+
+### Database Management
+```bash
+# Initialize database
+python manage.py initdb
+
+# Reset database
+python manage.py resetdb
+
+# Backup data
+python manage.py backup data.json
+
+# Restore from backup
+python manage.py restore data.json
+```
+
+### Token Management
+```bash
+# Create token with 30-day expiry
+python manage.py token create username --expires 30
+
+# Create permanent token
+python manage.py token create username
+
+# List all tokens
+python manage.py token list
+
+# Show token details
+python manage.py token info username
+
+# Revoke token
+python manage.py token revoke username
+```
+
+### Configuration Management
+```bash
+# Validate configuration
+python manage.py checkconfig
+
+# Start interactive shell
+python manage.py shell
+```
+
+## Service Configuration
+
+Configure services in `checks.yaml`:
 ```yaml
 - title: 'Infrastructure'
   checks:
@@ -77,112 +176,31 @@ PRIMARY_DATABASE_URL=sqlite:///path/to/your/database.db
       port: 5432
 ```
 
-5. Run the server:
+## Docker Support
+
+Run with Docker:
 ```bash
-python run.py
+docker-compose up -d
 ```
 
-## Database Schema
-
-```mermaid
-erDiagram
-    ServiceHealthCheck {
-        int id PK
-        string hostname
-        string local_ip
-        string public_ip
-        string service_group
-        string service_name
-        string status
-        float response_time
-        text url
-        text extra_data
-        datetime timestamp
-    }
-```
-
-## API Endpoints
-
-| Endpoint | Method | Description | Parameters |
-|----------|--------|-------------|------------|
-| `/api/status` | GET | Current status of all services | None |
-| `/api/history` | GET | Historical data for all services | `hours` (default: 24) |
-| `/api/history/{group_name}` | GET | Historical data for a group | `hours` (default: 24) |
-| `/api/reset-db` | POST | Reset the database | None |
-
-## Check Types
-
-### HTTP Check
-```yaml
-- name: Website
-  type: http
-  host: https://example.com
-  expected_code: 200
-  ssc: false  # Self-signed certificate
-```
-
-### Ping Check
-```yaml
-- name: Server
-  type: ping
-  host: server.example.com
-```
-
-### Port Check
-```yaml
-- name: Database
-  type: port
-  host: db.example.com
-  port: 5432
-```
-
-## Data Flow
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant A as FastAPI App
-    participant M as Monitor Service
-    participant D as Database
-    participant S as Services
-
-    C->>A: Request Status
-    A->>M: Get Current Status
-    M->>S: Check Services
-    M->>D: Store Results
-    M->>A: Return Results
-    A->>C: Display Status
-
-    C->>A: Request History
-    A->>M: Get History
-    M->>D: Query History
-    M->>A: Return History
-    A->>C: Display History
-```
-
-## Configuration Options
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| `MONITOR_CONTINUOUSLY` | Enable continuous monitoring | `True` |
-| `CHECK_INTERVAL` | Seconds between checks | `30` |
-| `MAX_HISTORY_ENTRIES` | Maximum history entries | `100` |
-| `PRIMARY_DATABASE_URL` | Database connection URL | `sqlite:///status_history.db` |
+Environment variables can be configured in `docker-compose.yml` or `.env` file.
 
 ## Development
 
 ### Project Structure
 ```
-StatusWatch/
+statuswatch/
 ├── app/
 │   ├── main.py           # FastAPI application
 │   ├── config.py         # Configuration
 │   ├── database.py       # Database models
+│   ├── auth.py          # Authentication
 │   └── services/
 │       ├── monitor.py    # Monitoring logic
 │       └── checks.py     # Check implementations
-├── checks.yaml           # Service configuration
-└── incidents.md          # Incident reports
+├── manage.py            # CLI management
+├── checks.yaml          # Service configuration
+└── incidents.md         # Incident reports
 ```
 
 ### Running Tests
@@ -194,111 +212,6 @@ pytest tests/
 - Chrome/Edge (latest)
 - Firefox (latest)
 - Safari (latest)
-
-## Changelog
-
-### Version 1.1.0 (Latest)
-- 🎨 Improved UI/UX across all pages
-- 📊 Enhanced chart visualization with:
-  - Different line patterns for services
-  - Smaller, clearer data points
-  - Better color contrast
-  - Interactive tooltips
-  - Zoom and pan capabilities
-- 🔍 Added detailed error inspection:
-  - Modal view for error details
-  - Full error payload display
-  - Response time tracking
-  - Duration calculations
-- ⚡ Performance improvements:
-  - Optimized database queries
-  - Added response caching
-  - Better error handling
-- 🎛️ Added configurable refresh intervals
-- 📱 Improved mobile responsiveness
-- 🌓 Enhanced dark mode support
-- 🧭 Added navigation between status and history pages
-- 📈 Improved history page with:
-  - Time range selection
-  - Service filtering
-  - Better uptime calculations
-  - Current failures summary
-- 🔄 Added auto-refresh capabilities
-- 💾 Added database reset functionality
-
-### Version 1.0.0 (Initial Release)
-- Basic status monitoring
-- Service grouping
-- Simple history tracking
-- Basic UI
-- HTTP, Ping, and Port checks
-- SQLite database storage
-- Basic API endpoints
-
-## Advanced Usage
-
-### Error Inspection
-Click the "View Details" button on any failed service to see:
-- Detailed error information
-- Response times
-- Duration of failure
-- Full error payload
-- Service history
-
-### Chart Interaction
-The history charts support:
-- Zooming in/out
-- Panning
-- Service toggling
-- Time range selection
-- Tooltip information
-
-### Auto-refresh Options
-Configure automatic updates with intervals:
-- 30 seconds
-- 1 minute
-- 5 minutes
-- 10 minutes
-- Manual refresh option
-
-## API Response Examples
-
-### Status Response
-```json
-{
-  "Group 1": [
-    {
-      "name": "Website",
-      "status": true,
-      "response_time": 0.234,
-      "url": "https://example.com"
-    }
-  ]
-}
-```
-
-### History Response
-```json
-{
-  "history": {
-    "Group 1": {
-      "Website": [
-        {
-          "x": "2024-01-01T12:00:00",
-          "y": 1,
-          "response_time": 0.234
-        }
-      ]
-    }
-  },
-  "uptimes": {
-    "Group 1": 99.9
-  }
-}
-```
-
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 MIT License - see [LICENSE](LICENSE) for details
