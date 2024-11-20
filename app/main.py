@@ -135,7 +135,6 @@ async def history(request: Request, hours: int = Query(24)):
     """History page showing service status over time"""
     # Get session token if available
     session_token = await get_session_token(request)
-    print(f"Session token: {session_token}")
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
     sorted_history = sort_groups(grouped_history)
 
