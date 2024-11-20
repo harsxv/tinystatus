@@ -188,10 +188,7 @@
             flex-direction: column;
             align-items: center;
             gap: 12px;
-            margin-bottom: 24px;
-            background: var(--card-bg);
             padding: 16px;
-            border-radius: 12px;
             box-shadow: 0 2px 4px var(--card-shadow);
         }
         .controls-group {
