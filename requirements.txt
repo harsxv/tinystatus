@@ -9,3 +9,5 @@ pydantic-settings>=2.0.3
 python-dotenv>=1.0.0
 sqlalchemy>=2.0.0
 aiosqlite>=0.19.0
+bcrypt==4.2.1
+click==8.1.7
