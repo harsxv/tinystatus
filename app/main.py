@@ -10,6 +10,7 @@ from fastapi.templating import Jinja2Templates
 
 from .config import STATIC_DIR, TEMPLATE_DIR, get_settings
 from .services.monitor import StatusMonitor
+from .auth import require_auth, require_token
 
 # Setup FastAPI app
 app = FastAPI(title="StatusWatch")
@@ -68,6 +69,7 @@ async def startup_event():
 
 
 @app.get("/", response_class=HTMLResponse)
+@require_auth
 async def index(request: Request):
     """Home page showing current status of all services"""
     try:
@@ -105,7 +107,7 @@ async def index(request: Request):
                 "uptimes": uptimes,
                 "incidents": incidents_html,
                 "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "SERVER_SEPARATOR": monitor.SERVER_SEPARATOR
+                "SERVER_SEPARATOR": monitor.SERVER_SEPARATOR,
             },
         )
     except Exception as e:
@@ -114,9 +116,8 @@ async def index(request: Request):
 
 
 @app.get("/history", response_class=HTMLResponse)
-async def history(
-    request: Request, hours: int = Query(24, description="Hours of history to show")
-):
+@require_auth
+async def history(request: Request, hours: int = Query(24)):
     """History page showing service status over time"""
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
     sorted_history = sort_groups(grouped_history)
@@ -133,20 +134,22 @@ async def history(
             "uptimes": sorted_uptimes,
             "timeframe": f"Last {hours} hours",
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "SERVER_SEPARATOR": monitor.SERVER_SEPARATOR
+            "SERVER_SEPARATOR": monitor.SERVER_SEPARATOR,
         },
     )
 
 
 @app.get("/api/status")
-async def get_status():
+@require_token
+async def get_status(request: Request):
     """Get current status of all services"""
     current_status = await monitor.check_all_services()
     return sort_groups(current_status)
 
 
 @app.get("/api/history")
-async def get_history(hours: int = Query(24, description="Hours of history to return")):
+@require_token
+async def get_history(request: Request, hours: int = Query(24)):
     """Get historical data for all services"""
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
     sorted_history = sort_groups(grouped_history)
@@ -163,7 +166,8 @@ async def get_history(hours: int = Query(24, description="Hours of history to re
 
 
 @app.get("/api/history/{group_name}")
-async def get_group_history(group_name: str, hours: int = Query(24)):
+@require_token
+async def get_group_history(request: Request, group_name: str, hours: int = Query(24)):
     """Get historical data for a specific group"""
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
     if group_name not in grouped_history:
@@ -174,18 +178,6 @@ async def get_group_history(group_name: str, hours: int = Query(24)):
         "uptime": uptimes.get(group_name, 100.0),
         "timeframe": f"Last {hours} hours",
     }
-
-
-@app.post("/api/reset-db")
-async def reset_database():
-    """Reset the database"""
-    try:
-        monitor.reset_database()
-        return JSONResponse(
-            content={"message": "Database reset successful"}, status_code=200
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")
