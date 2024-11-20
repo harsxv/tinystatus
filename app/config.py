@@ -9,10 +9,21 @@ class Settings(BaseSettings):
     CHECK_INTERVAL: int = 30
     MAX_HISTORY_ENTRIES: int = 100
     LOG_LEVEL: str = "INFO"
-    CHECKS_FILE: Path = Path("checks.yaml")
-    INCIDENTS_FILE: Path = Path("incidents.md")
+    DATA_FOLDER: Path = Path("data")
+    CHECKS_FILE: Path = DATA_FOLDER / "checks.yaml"
+    INCIDENTS_FILE: Path = DATA_FOLDER / "incidents.md"
     TEMPLATE_FILE: str = "index.html.theme"
     HISTORY_TEMPLATE_FILE: str = "history.html.theme"
+
+    # Ensure the data folder exists
+    if not DATA_FOLDER.exists():
+        DATA_FOLDER.mkdir()
+
+    if not CHECKS_FILE.exists():
+        CHECKS_FILE.touch(exist_ok=True)
+
+    if not INCIDENTS_FILE.exists():
+        INCIDENTS_FILE.touch(exist_ok=True)
 
     # Database configuration
     PRIMARY_DATABASE_URL: str = "sqlite:///status_history.db"
