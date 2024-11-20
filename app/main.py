@@ -1,16 +1,18 @@
 import asyncio
+import json
 import logging
 from datetime import datetime
-import json
+from typing import Optional
+
 import markdown
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from .auth import get_current_user, require_auth, require_token, security
 from .config import STATIC_DIR, TEMPLATE_DIR, get_settings
 from .services.monitor import StatusMonitor
-from .auth import require_auth, require_token
 
 # Setup FastAPI app
 app = FastAPI(title="StatusWatch")
@@ -46,6 +48,18 @@ def get_url_from_status(status_data: dict) -> str:
             data = json.loads(extra_data)
             if data.get("type") == "http":
                 return data.get("host")
+    except:
+        pass
+    return None
+
+
+async def get_session_token(request: Request) -> Optional[str]:
+    """Get token from session or basic auth"""
+    try:
+        credentials = await security(request)
+        user = get_current_user(credentials)
+        if user and user.api_token:
+            return user.api_token
     except:
         pass
     return None
@@ -119,6 +133,9 @@ async def index(request: Request):
 @require_auth
 async def history(request: Request, hours: int = Query(24)):
     """History page showing service status over time"""
+    # Get session token if available
+    session_token = await get_session_token(request)
+    print(f"Session token: {session_token}")
     grouped_history, uptimes = monitor.get_combined_history(hours=hours)
     sorted_history = sort_groups(grouped_history)
 
@@ -126,6 +143,7 @@ async def history(request: Request, hours: int = Query(24)):
         group_name: uptimes.get(group_name, 100.0)
         for group_name in sorted_history.keys()
     }
+
     return templates.TemplateResponse(
         "history.html.theme",
         {
@@ -135,6 +153,7 @@ async def history(request: Request, hours: int = Query(24)):
             "timeframe": f"Last {hours} hours",
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "SERVER_SEPARATOR": monitor.SERVER_SEPARATOR,
+            "session_token": session_token,
         },
     )
 
