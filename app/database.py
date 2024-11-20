@@ -103,6 +103,8 @@ def init_db():
     # Create tables if they don't exist
     if not inspector.has_table("service_health_checks"):
         Base.metadata.create_all(engine)
+    if not inspector.has_table("users"):
+        Base.metadata.create_all(engine)
 
 
 # Initialize the database on startup
