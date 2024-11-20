@@ -2,58 +2,51 @@
 
 All notable changes to StatusWatch will be documented in this file.
 
-## [2.0.0] - 2024-02-19
+## [1.0.0] - 2024-02-19
 
 ### Added
-- 🔒 Authentication System
-  - Basic Auth for web interface
-  - Token-based API authentication
-  - Configurable authentication toggle
-  - Token expiration support
-  - User management system
-  - CLI commands for auth management
-
-- 🛠️ Management CLI
-  - User management commands
-  - Token management commands
-  - Database cleanup utilities
-  - Configuration validation
-  - Interactive setup
-  - Backup and restore functionality
-
-- 📊 Enhanced Monitoring
-  - Server IP integration in group names
-  - Better group organization
-  - Improved status tracking
-  - Enhanced error handling
-  - Better data consistency
-
-- 🎨 UI Improvements
-  - Modern design refresh
-  - Dark mode support
+- 🎨 New modern UI design with improved UX
+  - Added navigation bar between pages
+  - Improved dark mode support
   - Better mobile responsiveness
-  - Interactive charts with ApexCharts
-  - Dynamic data updates
-  - Improved error displays
+  - Enhanced visual hierarchy
 
-- 🔧 Database Features
-  - Database cleanup commands
-  - Entry management by group/service
-  - Historical data pruning
-  - Database statistics
-  - Better data organization
+- 📊 Enhanced History Page
+  - Interactive time-series charts with ApexCharts
+  - Configurable time ranges (1h, 6h, 12h, 24h, 3d, 7d)
+  - Service-specific detailed views
+  - Zoom and pan capabilities
+  - Different line patterns for better service distinction
+  - Tooltips with response times
+
+- 🔍 Error Inspection Features
+  - Detailed error modal view
+  - Full error payload inspection
+  - Response time tracking
+  - Failure duration calculations
+  - Service status history
+
+- ⚡ Performance Improvements
+  - Added response caching
+  - Optimized database queries
+  - Better error handling
+  - Improved data loading
+
+- 🔄 Auto-refresh Functionality
+  - Configurable refresh intervals
+  - Visual countdown timer
+  - Manual refresh option
+  - Persistent user preferences
 
 ### Changed
-- Switched to FastAPI for better async support
+- Renamed project to StatusWatch
+- Restructured project layout for better organization
 - Improved database schema and handling
 - Enhanced API responses with more details
 - Better error handling and logging
 - Updated documentation with new features
 - Improved chart visualizations
 - Better status display and grouping
-- Changed group separator to '#' for better compatibility
-- Improved token management system
-- Enhanced security features
 
 ### Fixed
 - Chart rendering issues
@@ -64,10 +57,8 @@ All notable changes to StatusWatch will be documented in this file.
 - Mobile layout issues
 - Error data parsing
 - Response time accuracy
-- Group name handling
-- Authentication edge cases
 
-## [1.0.0] - Initial Release
+## [1.0.0] - Original Fork
 
 ### Features
 - Basic status monitoring
@@ -78,10 +69,10 @@ All notable changes to StatusWatch will be documented in this file.
 - SQLite database storage
 - Basic API endpoints
 
-### Technical
-- FastAPI implementation
-- Async support
-- Basic monitoring
-- SQLite database
-- Simple templating
-- Basic API endpoints
+### Technical Changes
+- Migrated to FastAPI
+- Added async support
+- Implemented basic monitoring
+- Added SQLite database
+- Basic templating system
+- Simple API endpoints 
