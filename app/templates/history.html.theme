@@ -733,7 +733,7 @@
                 <div class="group-header">
                     <div class="group-title-container">
                         <h2 class="group-title">{{ display_name }}</h2>
-                        {% if ip %}3
+                        {% if ip %}
                         <span class="group-ip">{{ ip }}</span>
                         {% endif %}
                     </div>
