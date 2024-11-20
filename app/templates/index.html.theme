@@ -317,7 +317,7 @@
                         <span class="service-name-text">{{ service.name }}</span>
                         {% endif %}
                         {% if service.response_time %}
-                        <span class="response-time">{{ "%.3f"|format(service.response_time) }}s</span>
+                        <span class="response-time">{{ "%.3f"|format(service.response_time) }}ms</span>
                         {% endif %}
                     </div>
                     <span class="status-badge {% if service.status %}status-up{% else %}status-down{% endif %}">
