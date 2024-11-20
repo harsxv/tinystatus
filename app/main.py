@@ -9,10 +9,12 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import func
 
 from .auth import get_current_user, require_auth, require_token, security
 from .config import STATIC_DIR, TEMPLATE_DIR, get_settings
 from .services.monitor import StatusMonitor
+from .database import ServiceHealthCheck, get_db
 
 # Setup FastAPI app
 app = FastAPI(title="StatusWatch")
@@ -87,10 +89,14 @@ async def startup_event():
 async def index(request: Request):
     """Home page showing current status of all services"""
     try:
+        # Get current status
         grouped_history, uptimes = monitor.get_combined_history(hours=24)
+
+        # Get incidents
         with open(monitor.settings.INCIDENTS_FILE, "r") as f:
             incidents_html = markdown.markdown(f.read())
 
+        # Sort groups
         sorted_groups = sort_groups(grouped_history)
         groups = {}
 
@@ -113,6 +119,17 @@ async def index(request: Request):
                         "response_time": latest_status.get("response_time", 0),
                     }
                 )
+
+        # Get most recent timestamp from database
+        db = next(get_db())
+        last_updated = db.query(func.max(ServiceHealthCheck.timestamp)).scalar()
+
+        # Format timestamp or use current time if no entries
+        if last_updated:
+            last_updated = last_updated.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         return templates.TemplateResponse(
             "index.html.theme",
             {
@@ -120,7 +137,7 @@ async def index(request: Request):
                 "groups": groups,
                 "uptimes": uptimes,
                 "incidents": incidents_html,
-                "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "last_updated": last_updated,
                 "SERVER_SEPARATOR": monitor.SERVER_SEPARATOR,
             },
         )

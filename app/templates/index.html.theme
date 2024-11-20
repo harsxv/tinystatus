@@ -263,6 +263,13 @@
             border-radius: 6px;
             white-space: nowrap;
         }
+        .last-updated-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            color: var(--footer-color);
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -288,6 +295,11 @@
                 </a>
             </div>
         </div>
+
+        <div class="last-updated-container">
+            <span>Last updated: <span id="last-updated">{{ last_updated }}</span></span>
+        </div>
+
 
         <div class="status-grid">
             {% for group_name, content in groups.items() %}
@@ -317,7 +329,7 @@
                         <span class="service-name-text">{{ service.name }}</span>
                         {% endif %}
                         {% if service.response_time %}
-                        <span class="response-time">{{ "%.3f"|format(service.response_time) }}ms</span>
+                        <span class="response-time">{{ "%.1f"|format(service.response_time) }}ms</span>
                         {% endif %}
                     </div>
                     <span class="status-badge {% if service.status %}status-up{% else %}status-down{% endif %}">
@@ -338,7 +350,6 @@
             </div>
             {% endfor %}
         </div>
-
         <div class="incidents">
             <h2>Incident History</h2>
             {{ incidents | safe }}
