@@ -25,7 +25,7 @@ class StatusMonitor:
 
     def load_checks(self) -> List[Dict]:
         with open(self.settings.CHECKS_FILE, "r") as f:
-            return yaml.safe_load(f)
+            return yaml.safe_load(f) or {}
 
     async def check_all_services(self) -> Dict[str, List[Dict]]:
         # Check cache first
