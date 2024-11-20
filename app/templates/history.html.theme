@@ -708,7 +708,6 @@
                 
                 <select id="refreshInterval" class="time-selector">
                     <option value="0">Manual Refresh</option>
-                    <option value="30">30 Seconds</option>
                     <option value="60">1 Minute</option>
                     <option value="300">5 Minutes</option>
                     <option value="600">10 Minutes</option>
