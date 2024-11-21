@@ -2,8 +2,11 @@
 
 All notable changes to StatusWatch will be documented in this file.
 
+## 1.0.2
+- Switch App name
+
 ## 1.0.1
--  Move checks and incidents to a data folder
+- Move checks and incidents to a data folder
 
 ## [1.0.0] - 2024-02-19
 
