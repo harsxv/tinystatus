@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StatusWatch History</title>
+    <title>IBL Monitoring History</title>
     <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="shortcut icon" href="/assets/favicon.ico" />
@@ -676,7 +676,7 @@
         <div class="header">
             <div class="logo">
                 <img src="/assets/logo.png" alt="Logo"/>
-                <h1>StatusWatch</h1>
+                <h1>IBL Monitoring</h1>
             </div>
             <div class="nav-links">
                 <a href="/" class="nav-link">
@@ -783,7 +783,6 @@
         <div class="footer">
             <p>Last updated: <span id="last-updated">{{ last_updated }}</span></p>
             <p><a href="/">Back to Current Status</a></p>
-            <p>Powered by <a href="https://github.com/yourusername/StatusWatch">StatusWatch</a></p>
         </div>
     </div>
 
