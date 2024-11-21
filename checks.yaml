@@ -80,3 +80,10 @@
       host: https://homeserver.local
       ssc: True
       expected_code: 200
+
+    # - name: My Custom Check
+    #   type: user_defined
+    #   module_name: external_script
+    #   function_name: check_custom
+    #   variables:
+    #     custom_var: custom_value
