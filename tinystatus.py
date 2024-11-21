@@ -12,6 +12,7 @@ from datetime import datetime
 import json
 import logging
 import platform
+import importlib
 
 # Load environment variables
 load_dotenv()
@@ -62,6 +63,16 @@ async def check_port(host, port):
     except:
         return False
 
+async def check_user_defined(module_name, function_name, variables=None):
+    try:
+        module = importlib.import_module(module_name)
+        function = getattr(module, function_name)
+        return function(**variables)
+    except Exception as e:
+        print(f"Error running user defined check: {e}")
+        return False
+    
+
 
 async def run_checks(checks):
     background_tasks = {}
@@ -76,7 +87,8 @@ async def run_checks(checks):
             task = tg.create_task(
                 check_http(check['host'], check['expected_code'], selfcert) if check['type'] == 'http' else
                 check_ping(check['host']) if check['type'] == 'ping' else
-                check_port(check['host'], check['port']) if check['type'] == 'port' else None,
+                check_port(check['host'], check['port']) if check['type'] == 'port' else
+                check_user_defined(check['module_name'], check['function_name'], check['variables']) if check['type'] == 'user_defined' else None,
                 name=check['name']
             )
             if task:
