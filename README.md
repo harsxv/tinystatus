@@ -123,6 +123,16 @@ In order to run the script using Docker:
 - Adjust the configuration variables in the `.env` file to customize the behavior of TinyStatus.
 - Customize the appearance of the status page by editing the CSS in `index.html.theme` and `history.html.theme`.
 - Add or remove services by modifying the `checks.yaml` file.
+- Add your own custom checks by adding a check of type `user_defined` to the `checks.yaml` file. The check can be any Python function that takes the specified variables as input and returns a boolean value.
+  Example:
+  ```yaml
+  - name: My Custom Check
+    type: user_defined
+    module_name: my_module_name
+    function_name: my_function_name
+    variables:
+      custom_var: custom_value
+  ```
 
 ## Porting TinyStatus
 
