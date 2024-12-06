@@ -101,7 +101,10 @@ async def run_checks(checks):
 def load_history():
     if os.path.exists(STATUS_HISTORY_FILE):
         with open(STATUS_HISTORY_FILE, 'r') as f:
-            return json.load(f)
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {}
     return {}
 
 
@@ -221,6 +224,7 @@ def main():
     os.makedirs(HTML_OUTPUT_DIRECTORY, exist_ok=True)
     with open(os.path.join(HTML_OUTPUT_DIRECTORY, 'index.html'), 'w') as f:
         f.write(html)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=getattr(logging, LOG_LEVEL), format='%(asctime)s - %(levelname)s - %(message)s')
