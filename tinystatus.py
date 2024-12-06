@@ -23,7 +23,7 @@ MONITOR_CONTINOUSLY = os.getenv('MONITOR_CONTINOUSLY', 'True') == 'True'
 CHECK_INTERVAL = int(os.getenv('CHECK_INTERVAL', 30))
 MAX_HISTORY_ENTRIES = int(os.getenv('MAX_HISTORY_ENTRIES', 100))
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-CHECKS_FILE = os.getenv('CHECKS_FILE', "checks.yaml")
+CHECKS_FILE = os.getenv('CHECKS_FILE', 'checks.yaml')
 INCIDENTS_FILE = os.getenv('INCIDENTS_FILE', 'incidents.md')
 TEMPLATE_FILE = os.getenv('TEMPLATE_FILE', 'index.html.theme')
 HISTORY_TEMPLATE_FILE = os.getenv('HISTORY_TEMPLATE_FILE', 'history.html.theme')
