@@ -40,7 +40,7 @@
 
     - name: Dummy Postgres Database
       type: port
-      host: ec2-54-173-89-248.compute-1.amazonaws.com
+      host: ec2-54-173-89-228.compute-1.amazonaws.net
       port: 5432
 
     - name: Dummy MySQL Database
