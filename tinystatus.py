@@ -13,23 +13,27 @@ import json
 import logging
 import platform
 
+
 # Load environment variables
 load_dotenv()
+
 
 # Configuration
 MONITOR_CONTINOUSLY = os.getenv('MONITOR_CONTINOUSLY', 'True') == 'True'
 CHECK_INTERVAL = int(os.getenv('CHECK_INTERVAL', 30))
 MAX_HISTORY_ENTRIES = int(os.getenv('MAX_HISTORY_ENTRIES', 100))
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-CHECKS_FILE = os.getenv('CHECKS_FILE', 'checks.yaml')
+CHECKS_FILE = os.getenv('CHECKS_FILE', "checks.yaml")
 INCIDENTS_FILE = os.getenv('INCIDENTS_FILE', 'incidents.md')
 TEMPLATE_FILE = os.getenv('TEMPLATE_FILE', 'index.html.theme')
 HISTORY_TEMPLATE_FILE = os.getenv('HISTORY_TEMPLATE_FILE', 'history.html.theme')
 STATUS_HISTORY_FILE = os.getenv('STATUS_HISTORY_FILE', 'history.json')
-HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY', os.getcwd())
+HTML_OUTPUT_DIRECTORY = os.getenv('HTML_OUTPUT_DIRECTORY',f"{os.getcwd()}/web")
+
 
 # Platform Idendifier
 PLATFORM = platform.system().lower()
+
 
 # Service check functions
 async def check_http(url, expected_code, selfsigned):
@@ -119,10 +123,38 @@ def update_history(results):
     save_history(history)
 
 
+async def download_file(url, filename):
+    async with aiohttp.ClientSession() as session:
+        print(f"Starting download file from {url}")
+        async with session.get(url) as response:
+            assert response.status == 200
+            with open(filename, "wb") as f:
+                while True:
+                    chunk = await response.content.readany()
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            print(f"Downloaded {filename} from {url}")
+
+
+async def get_missing_files():
+    # Downloads (latest version of) missing files 
+    if not os.path.exists(CHECKS_FILE):
+        await download_file("https://raw.githubusercontent.com/harsxv/tinystatus/refs/heads/master/checks.yaml", CHECKS_FILE)
+    if not os.path.exists(INCIDENTS_FILE):
+        await download_file("https://raw.githubusercontent.com/harsxv/tinystatus/refs/heads/master/incidents.md", INCIDENTS_FILE)
+    if not os.path.exists(TEMPLATE_FILE):
+        await download_file("https://raw.githubusercontent.com/harsxv/tinystatus/refs/heads/master/index.html.theme", TEMPLATE_FILE)
+    if not os.path.exists(HISTORY_TEMPLATE_FILE):
+        await download_file("https://raw.githubusercontent.com/harsxv/tinystatus/refs/heads/master/history.html.theme", HISTORY_TEMPLATE_FILE)
+
+
 # Main monitoring loop
 async def monitor_services():
     os.makedirs(HTML_OUTPUT_DIRECTORY, exist_ok=True)
 
+    await get_missing_files()
+    
     while True:
         start_ts = time.monotonic()
         down_services = []
