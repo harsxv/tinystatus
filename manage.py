@@ -11,6 +11,8 @@ from dotenv import load_dotenv, set_key
 from app.database import User, ServiceHealthCheck, get_db
 from datetime import datetime, timedelta
 from sqlalchemy.sql import func
+import secrets
+import string
 
 # Add app directory to path
 sys.path.append(str(Path(__file__).parent))
@@ -527,6 +529,68 @@ def stats():
             
     except Exception as e:
         click.echo(f"Error getting database stats: {str(e)}", err=True)
+
+@cli.command()
+@click.option('--username', default='admin', help='Admin username (default: admin)')
+def setupadmin(username):
+    """Create default admin user with random password and API token"""
+    try:
+        from app.database import User
+        db = next(get_db())
+        
+        # Generate a secure random password
+        password_chars = string.ascii_letters + string.digits + "!@#$%^&*"
+        password = ''.join(secrets.choice(password_chars) for _ in range(16))
+        
+        # Check if user exists
+        user = db.query(User).filter(User.username == username).first()
+        if user:
+            click.echo(f"User {username} already exists!", err=True)
+            if click.confirm('Do you want to reset the password and generate a new token?'):
+                user.set_password(password)
+                token = user.generate_token()
+            else:
+                return
+        else:
+            # Create new user
+            user = User(username=username)
+            user.set_password(password)
+            db.add(user)
+            token = user.generate_token()
+        
+        db.commit()
+        
+        # Prepare credentials data
+        credentials = {
+            "username": username,
+            "password": password,
+            "api_token": token,
+            "created_at": datetime.utcnow().isoformat(),
+            "auth_enabled": settings.AUTH_ENABLED
+        }
+        
+        # Save credentials to JSON file in data folder
+        credentials_file = settings.DATA_FOLDER / 'admin_credentials.json'
+        with open(credentials_file, 'w') as f:
+            json.dump(credentials, f, indent=2)
+        
+        click.echo(f"\nDefault admin user setup complete:")
+        click.echo(f"Username: {username}")
+        click.echo(f"Password: {password}")
+        click.echo(f"API Token: {token}")
+        click.echo(f"Credentials saved to: {credentials_file.absolute()}")
+        
+        # Show warning if authentication is disabled
+        if not settings.AUTH_ENABLED:
+            click.echo("\nWarning: Authentication is currently disabled!")
+            click.echo("Run 'python manage.py auth enable' to enable authentication")
+            
+        # Show example curl command
+        click.echo("\nExample API call:")
+        click.echo(f"curl -H 'Authorization: Bearer {token}' http://localhost:8000/api/status")
+            
+    except Exception as e:
+        click.echo(f"Error setting up admin user: {str(e)}", err=True)
 
 if __name__ == '__main__':
     cli() 
