@@ -2,6 +2,11 @@
 
 All notable changes to StatusWatch will be documented in this file.
 
+## 1.0.3
+- Includes APIs to store healthcheck data
+- Adds setupadmin command to ensure credentials can be shared file a file
+- Adds public status endpoint
+
 ## 1.0.2
 - Switch App name
 
