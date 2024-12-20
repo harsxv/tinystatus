@@ -155,6 +155,8 @@ class StatusMonitor:
         for result in results:
             # Format group name to include IP if available
             group_name = result.service_group
+            if group_name in ["system"]:
+                continue
             if result.local_ip and result.local_ip != "0.0.0.0":
                 group_name = (
                     f"{result.service_group}{SERVER_SEPARATOR}{result.local_ip}"

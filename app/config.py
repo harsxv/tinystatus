@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     INCIDENTS_FILE: Path = DATA_FOLDER / "incidents.md"
     TEMPLATE_FILE: str = "index.html.theme"
     HISTORY_TEMPLATE_FILE: str = "history.html.theme"
+    PUBLIC_STATUS_MAX_AGE_MINUTES: int = 5  # Maximum age of status data for public endpoint
 
     # Ensure the data folder exists
     if not DATA_FOLDER.exists():

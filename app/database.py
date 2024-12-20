@@ -88,6 +88,26 @@ class ServiceHealthCheck(Base):
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+class ServiceRecovery(Base):
+    """Model for storing service recovery states"""
+    __tablename__ = "service_recoveries"
+
+    id = Column(Integer, primary_key=True)
+    service_group = Column(String(50), nullable=False)
+    service_name = Column(String(50), nullable=False)
+    status = Column(String(20), nullable=False)
+    stage = Column(String(50))
+    error = Column(Text)
+    hostname = Column(String(255))
+    local_ip = Column(String(50))
+    public_ip = Column(String(50))
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime)
+    stabilization_end_time = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -104,6 +124,8 @@ def init_db():
     if not inspector.has_table("service_health_checks"):
         Base.metadata.create_all(engine)
     if not inspector.has_table("users"):
+        Base.metadata.create_all(engine)
+    if not inspector.has_table("service_recoveries"):
         Base.metadata.create_all(engine)
 
 

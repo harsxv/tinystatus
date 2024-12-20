@@ -1,18 +1,25 @@
 import asyncio
 import json
 import logging
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, List, Union
+from enum import Enum
 
 import markdown
-from fastapi import FastAPI, HTTPException, Query, Request
+from sqlalchemy import and_, or_, func
+from fastapi import FastAPI, HTTPException, Query, Request, Body, Depends, APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from .auth import get_current_user, require_auth, require_token, security
 from .config import STATIC_DIR, TEMPLATE_DIR, get_settings
+from .database import ServiceHealthCheck, get_db
 from .services.monitor import StatusMonitor
+from .schemas import StatusType, HealthCheckCreate, HealthCheckResponse, RecoveryCreate, NotificationCreate, RecoveryDataResponse
+from .services.health_checks import HealthCheckService
 
 # Setup FastAPI app
 app = FastAPI(title="StatusWatch")
@@ -229,4 +236,273 @@ async def health_check():
                 "timestamp": datetime.utcnow().isoformat(),
             },
             status_code=503,
+        )
+
+
+@app.post("/api/health-checks", response_model=HealthCheckResponse)
+@require_token
+async def create_health_check(
+    request: Request,
+    data: Union[HealthCheckCreate, RecoveryCreate, NotificationCreate] = Body(...),
+    db: Session = Depends(get_db)
+):
+    """Submit a service health check with support for all data types"""
+    try:
+        service = HealthCheckService(db)
+        health_check = service.create_health_check(data)
+        return HealthCheckResponse.model_validate(health_check)
+    except Exception as e:
+        logging.error(f"Error recording health check: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/health-checks/latest", response_model=List[HealthCheckResponse])
+@require_token
+async def get_latest_health_checks(
+    request: Request,
+    service_group: Optional[str] = None,
+    service_name: Optional[str] = None,
+    public_ip: Optional[str] = None,
+    status: Optional[StatusType] = None,
+    db: Session = Depends(get_db),
+):
+    """Get latest health checks with filtering"""
+    try:
+        service = HealthCheckService(db)
+        results = service.get_latest_checks(
+            service_group=service_group,
+            service_name=service_name,
+            public_ip=public_ip,
+            status=status,
+        )
+        return [HealthCheckResponse.model_validate(check) for check in results]
+    except Exception as e:
+        logging.error(f"Error getting latest health checks: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/health-checks/history")
+@require_token
+async def get_health_check_history(
+    request: Request,
+    start_time: datetime,
+    end_time: Optional[datetime] = None,
+    service_group: Optional[str] = None,
+    service_name: Optional[str] = None,
+    status: Optional[StatusType] = None,
+    include_recovery: bool = False,
+    include_notifications: bool = False,
+    page: int = 1,
+    page_size: int = 100,
+):
+    """Get historical health check data with comprehensive filtering"""
+    try:
+        db = next(get_db())
+
+        query = db.query(ServiceHealthCheck)
+
+        # Time range filter
+        query = query.filter(ServiceHealthCheck.timestamp >= start_time)
+        if end_time:
+            query = query.filter(ServiceHealthCheck.timestamp <= end_time)
+
+        # Apply other filters
+        if service_group:
+            query = query.filter(ServiceHealthCheck.service_group == service_group)
+        if service_name:
+            query = query.filter(ServiceHealthCheck.service_name == service_name)
+        if status:
+            query = query.filter(ServiceHealthCheck.status == status)
+
+        # Status type filters
+        if not include_recovery:
+            query = query.filter(~ServiceHealthCheck.status.like("recovery_%"))
+        if not include_notifications:
+            query = query.filter(~ServiceHealthCheck.status.like("notification_%"))
+
+        # Add pagination
+        total = query.count()
+        query = query.order_by(ServiceHealthCheck.timestamp.desc())
+        query = query.offset((page - 1) * page_size).limit(page_size)
+
+        results = query.all()
+
+        return {
+            "status": "success",
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total": total,
+                "pages": (total + page_size - 1) // page_size,
+            },
+            "data": [
+                {
+                    "timestamp": check.timestamp.isoformat(),
+                    "hostname": check.hostname,
+                    "local_ip": check.local_ip,
+                    "public_ip": check.public_ip,
+                    "service_name": check.service_name,
+                    "service_group": check.service_group,
+                    "status": check.status,
+                    "response_time": check.response_time,
+                    "url": check.url,
+                    "extra_data": json.loads(check.extra_data)
+                    if check.extra_data
+                    else None,
+                }
+                for check in results
+            ],
+        }
+    except Exception as e:
+        logging.error(f"Error getting health check history: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/recovery")
+async def get_recovery_data(
+    request: Request,
+    service_name: Optional[str] = None,
+    service_group: Optional[str] = None,
+    public_ip: Optional[str] = None,
+    status: Optional[StatusType] = None,
+    db: Session = Depends(get_db),
+):
+    """Get recovery data for services with query parameters"""
+    try:
+        service = HealthCheckService(db)
+        results = service.get_recovery_data(
+            service_name=service_name,
+            service_group=service_group,
+            public_ip=public_ip,
+            status=status
+        )
+        data = RecoveryDataResponse.model_validate(results) if results else {}
+        return data
+    except Exception as e:
+        logging.error(f"Error getting recovery data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class RecoveryStateUpdate(BaseModel):
+    service_name: str
+    service_group: str
+    status: str
+    stage: Optional[str] = None
+    error: Optional[str] = None
+    start_time: Optional[datetime] = None
+    local_ip: Optional[str] = None
+    public_ip: Optional[str] = None
+    hostname: Optional[str] = None
+    stabilization_end_time: Optional[datetime] = None
+
+
+@app.post("/api/recovery", response_model=RecoveryDataResponse)
+@require_token
+async def update_recovery_state(
+    request: Request,
+    data: RecoveryStateUpdate,
+    db: Session = Depends(get_db),
+):
+    """Update service recovery state"""
+    try:
+        service = HealthCheckService(db)
+        recovery_data = RecoveryCreate(
+            service_name=data.service_name,
+            service_group=data.service_group,
+            status=data.status,
+            stage=data.stage,
+            error=data.error,
+            start_time=data.start_time or datetime.utcnow(),
+            local_ip=data.local_ip,
+            public_ip=data.public_ip,
+            hostname=data.hostname,
+            stabilization_end_time=data.stabilization_end_time,
+        )
+        result = service.create_recovery_state(recovery_data)
+        return RecoveryDataResponse.model_validate(result)
+    except Exception as e:
+        logging.error(f"Error updating recovery state: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/public/status")
+async def get_public_status(db: Session = Depends(get_db)) -> Dict[str, Dict[str, Union[bool, List[str], str]]]:
+    """Public endpoint showing minimal system status from database - no auth required"""
+    try:
+        settings = get_settings()
+        cutoff_time = datetime.utcnow() - timedelta(minutes=settings.PUBLIC_STATUS_MAX_AGE_MINUTES)
+        
+        # Get latest status for each service
+        latest_checks = (
+            db.query(
+                ServiceHealthCheck.service_group,
+                ServiceHealthCheck.service_name,
+                ServiceHealthCheck.status,
+                func.max(ServiceHealthCheck.timestamp).label('latest_timestamp')
+            )
+            .group_by(
+                ServiceHealthCheck.service_group,
+                ServiceHealthCheck.service_name
+            )
+            .having(func.max(ServiceHealthCheck.timestamp) >= cutoff_time)
+            .all()
+        )
+        
+        if not latest_checks:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": {
+                        "healthy": False,
+                        "down_services": ["no_recent_data"],
+                        "last_check": None
+                    }
+                }
+            )
+            
+        response = {
+            "status": {
+                "healthy": True,
+                "down_services": [],
+                "last_check": None
+            }
+        }
+        
+        latest_timestamp = None
+        
+        for check in latest_checks:
+            # Skip system group
+            if check.service_group.lower() == "system":
+                continue
+                
+            # Update latest timestamp
+            if latest_timestamp is None or check.latest_timestamp > latest_timestamp:
+                latest_timestamp = check.latest_timestamp
+                
+            # Check if service is down
+            if check.status.lower() != "up":
+                response["status"]["healthy"] = False
+                response["status"]["down_services"].append(
+                    f"{check.service_group}/{check.service_name}"
+                )
+        
+        # Add last check timestamp
+        response["status"]["last_check"] = latest_timestamp.isoformat() if latest_timestamp else None
+        
+        # Return appropriate status code based on health
+        return JSONResponse(
+            status_code=200 if response["status"]["healthy"] else 400,
+            content=response
+        )
+        
+    except Exception as e:
+        logging.error(f"Error getting public status from database: {str(e)}")
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": {
+                    "healthy": False,
+                    "down_services": ["system_error"],
+                    "last_check": None
+                }
+            }
         )
