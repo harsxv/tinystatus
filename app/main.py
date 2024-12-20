@@ -422,3 +422,87 @@ async def update_recovery_state(
     except Exception as e:
         logging.error(f"Error updating recovery state: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/public/status")
+async def get_public_status(db: Session = Depends(get_db)) -> Dict[str, Dict[str, Union[bool, List[str], str]]]:
+    """Public endpoint showing minimal system status from database - no auth required"""
+    try:
+        settings = get_settings()
+        cutoff_time = datetime.utcnow() - timedelta(minutes=settings.PUBLIC_STATUS_MAX_AGE_MINUTES)
+        
+        # Get latest status for each service
+        latest_checks = (
+            db.query(
+                ServiceHealthCheck.service_group,
+                ServiceHealthCheck.service_name,
+                ServiceHealthCheck.status,
+                func.max(ServiceHealthCheck.timestamp).label('latest_timestamp')
+            )
+            .group_by(
+                ServiceHealthCheck.service_group,
+                ServiceHealthCheck.service_name
+            )
+            .having(func.max(ServiceHealthCheck.timestamp) >= cutoff_time)
+            .all()
+        )
+        
+        if not latest_checks:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": {
+                        "healthy": False,
+                        "down_services": ["no_recent_data"],
+                        "last_check": None
+                    }
+                }
+            )
+            
+        response = {
+            "status": {
+                "healthy": True,
+                "down_services": [],
+                "last_check": None
+            }
+        }
+        
+        latest_timestamp = None
+        
+        for check in latest_checks:
+            # Skip system group
+            if check.service_group.lower() == "system":
+                continue
+                
+            # Update latest timestamp
+            if latest_timestamp is None or check.latest_timestamp > latest_timestamp:
+                latest_timestamp = check.latest_timestamp
+                
+            # Check if service is down
+            if check.status.lower() != "up":
+                response["status"]["healthy"] = False
+                response["status"]["down_services"].append(
+                    f"{check.service_group}/{check.service_name}"
+                )
+        
+        # Add last check timestamp
+        response["status"]["last_check"] = latest_timestamp.isoformat() if latest_timestamp else None
+        
+        # Return appropriate status code based on health
+        return JSONResponse(
+            status_code=200 if response["status"]["healthy"] else 400,
+            content=response
+        )
+        
+    except Exception as e:
+        logging.error(f"Error getting public status from database: {str(e)}")
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": {
+                    "healthy": False,
+                    "down_services": ["system_error"],
+                    "last_check": None
+                }
+            }
+        )
