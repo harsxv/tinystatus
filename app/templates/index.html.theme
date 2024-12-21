@@ -19,8 +19,10 @@
             --card-shadow: rgba(0,0,0,0.05);
             --footer-color: #64748b;
             --link-color: #3b82f6;
-            --status-down-color: #ef4444;
-            --status-up-color: #22c55e;
+            --status-down-color: #dc2626;
+            --status-up-color: #16a34a;
+            --status-down-bg: #fee2e2;
+            --status-up-bg: #dcfce7;
             --border-color: #e2e8f0;
         }
         @media (prefers-color-scheme: dark) {
@@ -32,8 +34,10 @@
                 --card-shadow: rgba(0,0,0,0.3);
                 --footer-color: #94a3b8;
                 --link-color: #60a5fa;
-                --status-down-color: #f87171;
-                --status-up-color: #4ade80;
+                --status-down-color: #dc2626;
+                --status-up-color: #16a34a;
+                --status-down-bg: #450a0a;
+                --status-up-bg: #052e16;
                 --border-color: #334155;
             }
         }
@@ -121,13 +125,12 @@
         }
         .service-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            padding: 12px 16px;
             border-radius: 8px;
             margin-bottom: 10px;
-            background: var(--bg-color);
             transition: all 0.3s ease;
+            gap: 12px;
         }
         .service-item:hover {
             transform: translateX(5px);
@@ -136,6 +139,8 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1;
+            min-width: 0;
         }
         .service-name .link-icon {
             opacity: 0.6;
@@ -145,21 +150,19 @@
             opacity: 1;
         }
         .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 6px;
+        }
+        .status-badge span {
+            display: none;
         }
         .status-up {
-            background: var(--status-up-color);
-            color: white;
+            background: var(--status-up-bg);
+            border: 1px solid var(--status-up-color);
         }
         .status-down {
-            background: var(--status-down-color);
-            color: white;
+            background: var(--status-down-bg);
+            border: 1px solid var(--status-down-color);
         }
         .incidents {
             background: var(--card-bg);
@@ -227,20 +230,23 @@
         .response-time {
             font-size: 0.9em;
             color: var(--footer-color);
-            margin-left: 8px;
             padding: 2px 6px;
             background: var(--timeline-bg);
             border-radius: 4px;
+            white-space: nowrap;
+            margin-left: auto;
         }
 
-        .uptime-badge {
-            background: var(--status-up-color);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.9em;
-            font-weight: 500;
+        .group-status {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: var(--status-up-color);
         }
+
+        .group-status.down {
+            color: var(--status-down-color);
+        }
+
         .group-title-container {
             display: flex;
             align-items: center;
@@ -262,6 +268,22 @@
             padding: 4px 8px;
             border-radius: 6px;
             white-space: nowrap;
+        }
+
+        .status-up .status-badge svg {
+            color: var(--status-up-color);
+        }
+
+        .status-down .status-badge svg {
+            color: var(--status-down-color);
+        }
+
+        .service-title {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
@@ -299,40 +321,46 @@
                         <span class="group-ip">{{ content.info.ip }}</span>
                         {% endif %}
                     </div>
-                    <span class="uptime-badge">{{ uptimes[group_name] }}% Uptime</span>
-                </div>
-                {% for service in content.services %}
-                <div class="service-item">
-                    <div class="service-name">
-                        {% if service.url %}
-                        <a href="{{ service.url }}" target="_blank" class="service-link">
-                            {{ service.name }}
-                            <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                <polyline points="15 3 21 3 21 9"></polyline>
-                                <line x1="10" y1="14" x2="21" y2="3"></line>
-                            </svg>
-                        </a>
+                    <span class="group-status {% if not content.operational %}down{% endif %}">
+                        {% if content.operational %}
+                        OPERATIONAL
                         {% else %}
-                        <span class="service-name-text">{{ service.name }}</span>
-                        {% endif %}
-                        {% if service.response_time %}
-                        <span class="response-time">{{ "%.3f"|format(service.response_time) }}ms</span>
-                        {% endif %}
-                    </div>
-                    <span class="status-badge {% if service.status %}status-up{% else %}status-down{% endif %}">
-                        {% if service.status %}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
-                        </svg>
-                        Operational
-                        {% else %}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/>
-                        </svg>
-                        Down
+                        DEGRADED
                         {% endif %}
                     </span>
+                </div>
+                {% for service in content.services %}
+                <div class="service-item {% if service.status %}status-up{% else %}status-down{% endif %}">
+                    <div class="service-name">
+                        <span class="status-badge">
+                            {% if service.status %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+                            </svg>
+                            {% else %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"/>
+                            </svg>
+                            {% endif %}
+                        </span>
+                        <div class="service-title">
+                            {% if service.url %}
+                            <a href="{{ service.url }}" target="_blank" class="service-link">
+                                {{ service.name }}
+                                <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                                </svg>
+                            </a>
+                            {% else %}
+                            <span class="service-name-text">{{ service.name }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if service.response_time %}
+                    <span class="response-time">{{ "%.1f"|format(service.response_time) }}ms</span>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

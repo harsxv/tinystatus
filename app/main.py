@@ -18,7 +18,14 @@ from .auth import get_current_user, require_auth, require_token, security
 from .config import STATIC_DIR, TEMPLATE_DIR, get_settings
 from .database import ServiceHealthCheck, get_db
 from .services.monitor import StatusMonitor
-from .schemas import StatusType, HealthCheckCreate, HealthCheckResponse, RecoveryCreate, NotificationCreate, RecoveryDataResponse
+from .schemas import (
+    StatusType,
+    HealthCheckCreate,
+    HealthCheckResponse,
+    RecoveryCreate,
+    NotificationCreate,
+    RecoveryDataResponse,
+)
 from .services.health_checks import HealthCheckService
 
 # Setup FastAPI app
@@ -103,23 +110,36 @@ async def index(request: Request):
 
         for group_name, services in sorted_groups.items():
             display_name, ip = format_group_display(group_name)
-            groups[group_name] = {
-                "info": {"display": display_name, "ip": ip},
-                "services": [],
-            }
+
+            # Initialize group services list
+            group_services = []
+            all_operational = True  # Track if all services are operational
 
             for service_name, history_data in services.items():
                 latest_status = (
                     history_data[-1] if history_data else {"y": 1, "response_time": 0}
                 )
-                groups[group_name]["services"].append(
+                service_status = latest_status["y"] == 1
+
+                # If any service is down, the group is not fully operational
+                if not service_status:
+                    all_operational = False
+
+                group_services.append(
                     {
                         "name": service_name,
-                        "status": latest_status["y"] == 1,
+                        "status": service_status,
                         "url": get_url_from_status(latest_status),
                         "response_time": latest_status.get("response_time", 0),
                     }
                 )
+
+            groups[group_name] = {
+                "info": {"display": display_name, "ip": ip},
+                "services": group_services,
+                "operational": all_operational,  # Add operational status to group
+            }
+
         return templates.TemplateResponse(
             "index.html.theme",
             {
@@ -244,7 +264,7 @@ async def health_check():
 async def create_health_check(
     request: Request,
     data: Union[HealthCheckCreate, RecoveryCreate, NotificationCreate] = Body(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Submit a service health check with support for all data types"""
     try:
@@ -357,6 +377,7 @@ async def get_health_check_history(
         logging.error(f"Error getting health check history: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/recovery")
 async def get_recovery_data(
     request: Request,
@@ -373,7 +394,7 @@ async def get_recovery_data(
             service_name=service_name,
             service_group=service_group,
             public_ip=public_ip,
-            status=status
+            status=status,
         )
         data = RecoveryDataResponse.model_validate(results) if results else {}
         return data
@@ -425,28 +446,29 @@ async def update_recovery_state(
 
 
 @app.get("/api/public/status")
-async def get_public_status(db: Session = Depends(get_db)) -> Dict[str, Dict[str, Union[bool, List[str], str]]]:
+async def get_public_status(
+    db: Session = Depends(get_db),
+) -> Dict[str, Dict[str, Union[bool, List[str], str]]]:
     """Public endpoint showing minimal system status from database - no auth required"""
     try:
         settings = get_settings()
-        cutoff_time = datetime.utcnow() - timedelta(minutes=settings.PUBLIC_STATUS_MAX_AGE_MINUTES)
-        
+        cutoff_time = datetime.utcnow() - timedelta(
+            minutes=settings.PUBLIC_STATUS_MAX_AGE_MINUTES
+        )
+
         # Get latest status for each service
         latest_checks = (
             db.query(
                 ServiceHealthCheck.service_group,
                 ServiceHealthCheck.service_name,
                 ServiceHealthCheck.status,
-                func.max(ServiceHealthCheck.timestamp).label('latest_timestamp')
+                func.max(ServiceHealthCheck.timestamp).label("latest_timestamp"),
             )
-            .group_by(
-                ServiceHealthCheck.service_group,
-                ServiceHealthCheck.service_name
-            )
+            .group_by(ServiceHealthCheck.service_group, ServiceHealthCheck.service_name)
             .having(func.max(ServiceHealthCheck.timestamp) >= cutoff_time)
             .all()
         )
-        
+
         if not latest_checks:
             return JSONResponse(
                 status_code=400,
@@ -454,46 +476,43 @@ async def get_public_status(db: Session = Depends(get_db)) -> Dict[str, Dict[str
                     "status": {
                         "healthy": False,
                         "down_services": ["no_recent_data"],
-                        "last_check": None
+                        "last_check": None,
                     }
-                }
+                },
             )
-            
+
         response = {
-            "status": {
-                "healthy": True,
-                "down_services": [],
-                "last_check": None
-            }
+            "status": {"healthy": True, "down_services": [], "last_check": None}
         }
-        
+
         latest_timestamp = None
-        
+
         for check in latest_checks:
             # Skip system group
             if check.service_group.lower() == "system":
                 continue
-                
+
             # Update latest timestamp
             if latest_timestamp is None or check.latest_timestamp > latest_timestamp:
                 latest_timestamp = check.latest_timestamp
-                
+
             # Check if service is down
             if check.status.lower() != "up":
                 response["status"]["healthy"] = False
                 response["status"]["down_services"].append(
                     f"{check.service_group}/{check.service_name}"
                 )
-        
+
         # Add last check timestamp
-        response["status"]["last_check"] = latest_timestamp.isoformat() if latest_timestamp else None
-        
+        response["status"]["last_check"] = (
+            latest_timestamp.isoformat() if latest_timestamp else None
+        )
+
         # Return appropriate status code based on health
         return JSONResponse(
-            status_code=200 if response["status"]["healthy"] else 400,
-            content=response
+            status_code=200 if response["status"]["healthy"] else 400, content=response
         )
-        
+
     except Exception as e:
         logging.error(f"Error getting public status from database: {str(e)}")
         return JSONResponse(
@@ -502,7 +521,7 @@ async def get_public_status(db: Session = Depends(get_db)) -> Dict[str, Dict[str
                 "status": {
                     "healthy": False,
                     "down_services": ["system_error"],
-                    "last_check": None
+                    "last_check": None,
                 }
-            }
+            },
         )
