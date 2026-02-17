@@ -39,6 +39,7 @@
                 --status-down-color: #FF9185;
                 --status-up-color: #27ae60;
             }
+        }
         body {
             font-family: "Golos Text", sans-serif;
             line-height: 1.6;
