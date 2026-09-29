@@ -3,3 +3,6 @@ history.html
 history.json
 nohup.out
 .env
+venv/
+__pycache__/
+.pytest_cache/
