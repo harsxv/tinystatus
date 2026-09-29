@@ -67,11 +67,7 @@ async def run_checks(checks):
     background_tasks = {}
     async with asyncio.TaskGroup() as tg:
         for check in checks:
-            if check['type'] == 'http':
-                if 'ssc' in check:
-                    selfcert = check['ssc']
-                else:
-                    selfcert = False
+            selfcert = check.get('ssc', False) if check['type'] == 'http' else False
 
             task = tg.create_task(
                 check_http(check['host'], check['expected_code'], selfcert) if check['type'] == 'http' else
